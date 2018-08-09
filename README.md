@@ -15,4 +15,4 @@ install all dependencies
 ``` $ npm install -s ```
 
 ## Todo's
-- estimate gas price
+
