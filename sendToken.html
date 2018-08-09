@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<title>Send Token</title>
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script>
+		$(document).ready(function() {
+
+			$("#CreateKeyPairButton").click(function() {
+				$.get('http://localhost:8080/wallet/keypair', function(response, status) {
+					$("#Wallet").empty();
+					$("#Wallet").append($('<p></p>').text(response.address));
+					$("#Wallet").append($('<p></p>').text(response.privateKey));
+				});
+			});
+
+			$("#create-wallet-tab").click(function() {
+				$("#CreateWallet").toggle();
+			});
+
+			$("form#KeystoreForm").submit(function() {
+				$.post($(this).attr('action'), $(this).serialize(), function(response) {
+					$("#Wallet").empty();
+					$("#Wallet").append($('<p></p>').text(response.address));
+					$("#Wallet").append($('<p></p>').text(response.privateKey));
+					$("#Wallet").append($('<p></p>').text(response.keystore));
+				}, 'json');
+				return false;
+			});
+
+		});
+	</script>
+</head>
+
+<body>
+	<nav role="navigation" class="container nav-container">
+		<ul>
+			<li id="create-wallet-tab"><a>Create Wallet</a></li>
+			<li id="send-token-tab"><a>Send Token</a></li>
+			<li id="send-ether-tab"><a>Send Ether</a></li>
+		</ul>
+	</nav>
+
+
+	<div id="CreateWallet" class="container" style="display:none">
+		<h1>Create New Wallet</h1>
+		<button id="CreateKeyPairButton">Create New Wallet</button>
+		<form id="KeystoreForm" action="http://localhost:8080/wallet/keystore" method="post">
+			<input type="password" name="password" placeholder="Please enter a strong password" />
+			<input type="submit" value="Create New Wallet with Password" />
+		</form>
+
+
+
+
+		<div id="Wallet"></div>
+	</div>
+
+	<div id="TokenSender" class="container">
+		<div id="UserInfo">
+			<h1> Token Sender </h1>
+			<form action='http://localhost:8080/send' method="post" enctype="multipart/form-data">
+
+				<label for="fromAddress">From Address:</label>
+				<input type="text" name="fromAddress" placeholder="Enter your Account Address" />
+
+				<label for="fromPrivateKey">Your Private Key</label>
+				<input type="password" name="fromPrivateKey" placeholder="Enter your private key" />
+
+				<select name="contractAddress">
+					<option value="0x14466590b32b83be64898fd8b70e1a050da0a9d0"> MyTestingToken </option>
+				</select>
+
+				<div id="BatchTransaction">
+					<label for="destinations">Multiple Recipients:</label>
+					<input type="file" name="destinations" placeholder="List of Recipients" />
+				</div>
+
+				<!-- <div id="SingleTransaction"> <label for="toAddress" class="col-lg-2 control-label">To Address:</label> <input type="text" name="toAddress" placeholder="Enter your receipient" /> <label for="amount" class="col-lg-2 control-label">Transfer
+		Amount:</label> <input type="text" name="amount" placeholder="Enter amount" /> </div> -->
+
+				<input type="submit" value="Send Token" />
+
+			</form>
+
+		</div>
+
+		<div id="ContractInfo">
+		</div>
+
+	</div>
+
+
+
+
+	<div id="EtherSender" class="container" style="display: none">
+		<!-- TODO!!! -->
+	</div>
+</body>
+
+</html>
