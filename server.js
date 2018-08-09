@@ -1,40 +1,50 @@
 const config = require('./config/config.js');
 var express = require('express');
 var app = express();
+const bodyParser = require('body-parser');
 const formidable = require('formidable');
 const fs = require('fs');
 const parse = require('csv-parse/lib/sync');
-const Web3 = require('web3');
-const request = require('request');
 const delay = require('delay');
-const Tx = require('ethereumjs-tx');
-var web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/vCfQu4uCspVZEATQTcmJ'));
-
+const request = require('request');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
-	path: './outputs/transactions.csv',
-	header: [{
-			id: 'Name',
-			title: 'Name'
-		},
-		{
-			id: 'Address',
-			title: 'Address'
-		},
-		{
-			id: 'Amount',
-			title: 'Amount'
-		},
-		{
-			id: 'TxHash',
-			title: 'TxHash'
-		},
+  path: './outputs/transactions.csv',
+  header: [{
+    id: 'Name',
+    title: 'Name'
+  },
+  {
+    id: 'Address',
+    title: 'Address'
+  },
+  {
+    id: 'Amount',
+    title: 'Amount'
+  },
+  {
+    id: 'TxHash',
+    title: 'TxHash'
+  },
 
-	]
+]
 });
 
+const Tx = require('ethereumjs-tx');
+const Web3 = require('web3');
+var web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/vCfQu4uCspVZEATQTcmJ'));
+
 var transactionRecords = [];
-// var arrayCounter = 0;
+
+app.use(bodyParser.urlencoded({
+  extended:true
+}));
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 app.post('/send', (req, res) => {
 	var form = new formidable.IncomingForm();
@@ -68,9 +78,28 @@ app.post('/send', (req, res) => {
 	});
 });
 
-// app.use(bodyParser.urlencoded({
-//   extended:true
-// }));
+app.get('/wallet/keypair', (req, res) => {
+  var newAccount = web3.eth.accounts.create();
+  var keyPair = {
+    address: newAccount.address,
+    privateKey: newAccount.privateKey,
+  }
+  res.send(keyPair);
+});
+
+app.post('/wallet/keystore', (req, res) => {
+  // console.log(req.body.password);
+  var newAccount = web3.eth.accounts.create();
+  var keystore = newAccount.encrypt(req.body.password);
+  var wallet = {
+    address: newAccount.address,
+    privateKey: newAccount.privateKey,
+    keystore: keystore,
+  }
+  // console.log(wallet);
+  res.send(wallet);
+})
+
 
 var port = 8080;
 app.listen(port, () => console.log("Listening on port: " + port));
@@ -109,7 +138,6 @@ function sendToken(serializedTx, toAddress, amount, name) {
 
       transactionRecords.push(transactionRecord);
       console.log(hash);
-      // arrayCounter++;
     })
 }
 
