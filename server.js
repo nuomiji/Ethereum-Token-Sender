@@ -9,25 +9,25 @@ const delay = require('delay');
 const request = require('request');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
-  path: './outputs/transactions.csv',
-  header: [{
-    id: 'Name',
-    title: 'Name'
-  },
-  {
-    id: 'Address',
-    title: 'Address'
-  },
-  {
-    id: 'Amount',
-    title: 'Amount'
-  },
-  {
-    id: 'TxHash',
-    title: 'TxHash'
-  },
+	path: './outputs/transactions.csv',
+	header: [{
+			id: 'Name',
+			title: 'Name'
+		},
+		{
+			id: 'Address',
+			title: 'Address'
+		},
+		{
+			id: 'Amount',
+			title: 'Amount'
+		},
+		{
+			id: 'TxHash',
+			title: 'TxHash'
+		},
 
-]
+	]
 });
 
 const Tx = require('ethereumjs-tx');
@@ -37,13 +37,13 @@ var web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v
 var transactionRecords = [];
 
 app.use(bodyParser.urlencoded({
-  extended:true
+	extended: true
 }));
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
 });
 
 app.post('/send', (req, res) => {
@@ -79,25 +79,25 @@ app.post('/send', (req, res) => {
 });
 
 app.get('/wallet/keypair', (req, res) => {
-  var newAccount = web3.eth.accounts.create();
-  var keyPair = {
-    address: newAccount.address,
-    privateKey: newAccount.privateKey,
-  }
-  res.send(keyPair);
+	var newAccount = web3.eth.accounts.create();
+	var keyPair = {
+		address: newAccount.address,
+		privateKey: newAccount.privateKey,
+	}
+	res.send(keyPair);
 });
 
 app.post('/wallet/keystore', (req, res) => {
-  // console.log(req.body.password);
-  var newAccount = web3.eth.accounts.create();
-  var keystore = newAccount.encrypt(req.body.password);
-  var wallet = {
-    address: newAccount.address,
-    privateKey: newAccount.privateKey,
-    keystore: keystore,
-  }
-  // console.log(wallet);
-  res.send(wallet);
+	// console.log(req.body.password);
+	var newAccount = web3.eth.accounts.create();
+	var keystore = newAccount.encrypt(req.body.password);
+	var wallet = {
+		address: newAccount.address,
+		privateKey: newAccount.privateKey,
+		keystore: keystore,
+	}
+	// console.log(wallet);
+	res.send(wallet);
 })
 
 
@@ -120,29 +120,30 @@ function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, 
 		tx.sign(myPrivateKey);
 		var serializedTx = '0x' + tx.serialize().toString('hex');
 
-    sendToken(serializedTx, toAddress, amount, name);
+		sendToken(serializedTx, toAddress, amount, name);
 
 		transactionCount++;
 	}
 }
 
 function sendToken(serializedTx, toAddress, amount, name) {
-  web3.eth.sendSignedTransaction(serializedTx)
-    .on('transactionHash', (hash) => {
-      let transactionRecord = {
-        Name: name,
-        Address: toAddress,
-        Amount: amount,
-        TxHash: hash
-      }
+	web3.eth.sendSignedTransaction(serializedTx)
+		.on('transactionHash', (hash) => {
+			let transactionRecord = {
+				Name: name,
+				Address: toAddress,
+				Amount: amount,
+				TxHash: hash
+			}
 
-      transactionRecords.push(transactionRecord);
-      console.log(hash);
-    })
+			transactionRecords.push(transactionRecord);
+			console.log(hash);
+		})
 }
 
 function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress) {
 	var data = contract.methods.transfer(toAddress, amount).encodeABI();
+	
 	return {
 		"nonce": nonce,
 		"gasPrice": Web3.utils.toHex(web3.utils.toWei(config.gasPrice, "shannon")),
