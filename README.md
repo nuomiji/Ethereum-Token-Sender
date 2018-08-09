@@ -13,3 +13,6 @@ set python path in npm:
 install all dependencies
 
 ``` $ npm install -s ```
+
+## Todo's
+- estimate gas price
