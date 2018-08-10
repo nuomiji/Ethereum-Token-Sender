@@ -14,14 +14,25 @@ install all dependencies <br />
 ``` $ npm install -s ```
 
 ## Usage
-To create new wallet, click on ```Create Wallet``` tab in navgation bar <br />
-There are two types of wallet creation:<br />
+### Create Accounts
+To create new wallet, click on ```Create Wallet``` tab in navgation bar. There are two types of wallet creation:<br />
 - create account address and private key with a single click
 - create password encrypted account and generate keystore file
+
+### Select Token Type
+- inputs contract address (currently defaults to a testing token on Ropsten testnest)
+
+### Batch Transaction 
+- batch transaction done on given ERC20 token type (Ether transfer feature under development)
+- upload recipients info in csv file under the following format: ```Name, Address, Amount```
+- webpage will be redirected to etherscan and transaction hashes will be generated in CSV formt under outputs folder
+
+### (single transaction under development)
 
 ## Todo's
 - keystore file download
 - transfer Ether
 - singe transaction
+- user defined gas price
 
 
