@@ -36,6 +36,7 @@ var web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v
 
 var transactionRecords = [];
 
+// app.use() specifies the middleware in handling a request
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
@@ -46,7 +47,7 @@ app.use(function(req, res, next) {
 	next();
 });
 
-app.post('/send', (req, res) => {
+app.post('/send', (req, res, next) => {
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
 
@@ -56,27 +57,41 @@ app.post('/send', (req, res) => {
 			var myAddress = fields.fromAddress;
 			var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
 			var contractAddress = fields.contractAddress;
-
-			let etherscanURL = 'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
+			var chainId = fields.chainId;
+			var etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
+			let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
+			console.log(etherscanURL);
 
 			input = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
 				columns: true
 			});
 			request(etherscanURL, (error, response, data) => {
-				var abiArray = JSON.parse(JSON.parse(data).result);
-				var contract = new web3.eth.Contract(abiArray, contractAddress);
+				try {
+					var abiArray = JSON.parse(JSON.parse(data).result);
+					var contract = new web3.eth.Contract(abiArray, contractAddress);
 
-				web3.eth.getTransactionCount(myAddress).then((transactionCount) => {
-					sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress);
-					writeToCSV(input);
-				});
+					web3.eth.getTransactionCount(myAddress).then((transactionCount) => {
+						sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress);
+						writeToCSV(input);
+					});
+					setTimeout(() => {
+						res.redirect('https://ropsten.etherscan.io/address/' + myAddress);
+					}, 5000);
+				} catch (e) {
+					// console.error(e);
+					console.log("There's an error!");
+					next('route');
+				}
 			});
 		}
-		setTimeout(() => {
-			res.redirect('https://ropsten.etherscan.io/address/' + myAddress);
-		}, 5000);
 	});
 });
+
+
+app.post('/send', (req, res) => {
+	console.log("Bad Request");
+	res.sendStatus(400);
+})
 
 app.get('/wallet/keypair', (req, res) => {
 	var newAccount = web3.eth.accounts.create();
@@ -143,7 +158,7 @@ function sendToken(serializedTx, toAddress, amount, name) {
 
 function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress) {
 	var data = contract.methods.transfer(toAddress, amount).encodeABI();
-	
+
 	return {
 		"nonce": nonce,
 		"gasPrice": Web3.utils.toHex(web3.utils.toWei(config.gasPrice, "shannon")),
@@ -151,7 +166,7 @@ function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress
 		"to": contractAddress,
 		"value": web3.utils.toHex(0),
 		"data": data,
-		"chainId": 0x03,
+		"chainId": config.chainId,
 	}
 }
 
