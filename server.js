@@ -32,9 +32,9 @@ const csvWriter = createCsvWriter({
 
 const Tx = require('ethereumjs-tx');
 const Web3 = require('web3');
-var web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/vCfQu4uCspVZEATQTcmJ'));
 
 var transactionRecords = [];
+var web3;
 
 // app.use() specifies the middleware in handling a request
 app.use(bodyParser.urlencoded({
@@ -58,9 +58,12 @@ app.post('/send', (req, res, next) => {
 			var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
 			var contractAddress = fields.contractAddress;
 			var chainId = fields.chainId;
-			var etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
+			let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
+			let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
+			let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
+			web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
 			let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
-			console.log(etherscanURL);
+			// console.log(etherscanURL);
 
 			input = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
 				columns: true
@@ -68,6 +71,8 @@ app.post('/send', (req, res, next) => {
 			request(etherscanURL, (error, response, data) => {
 				try {
 					var abiArray = JSON.parse(JSON.parse(data).result);
+					// console.log(abiArray);
+
 					var contract = new web3.eth.Contract(abiArray, contractAddress);
 
 					web3.eth.getTransactionCount(myAddress).then((transactionCount) => {
@@ -75,11 +80,13 @@ app.post('/send', (req, res, next) => {
 						writeToCSV(input);
 					});
 					setTimeout(() => {
-						res.redirect('https://ropsten.etherscan.io/address/' + myAddress);
+						let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
+						res.redirect('https://'+ redirectPrefix +'etherscan.io/address/' + myAddress);
 					}, 5000);
 				} catch (e) {
 					// console.error(e);
 					console.log("There's an error!");
+					console.log(e);
 					next('route');
 				}
 			});
@@ -166,7 +173,7 @@ function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress
 		"to": contractAddress,
 		"value": web3.utils.toHex(0),
 		"data": data,
-		"chainId": config.chainId,
+		// "chainId": config.chainId,
 	}
 }
 
