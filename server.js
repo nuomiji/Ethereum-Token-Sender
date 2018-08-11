@@ -75,13 +75,22 @@ app.post('/send', (req, res, next) => {
 
 					var contract = new web3.eth.Contract(abiArray, contractAddress);
 
-					web3.eth.getTransactionCount(myAddress).then((transactionCount) => {
-						sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress);
-						writeToCSV(input);
-					});
+					web3.eth.getTransactionCount(myAddress)
+						.then((transactionCount) => {
+
+							sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress)
+								.catch((error) => {
+									console.log("Caught error in main!!");
+									next('route');
+								})
+								.then(() => {
+									writeToCSV(input);
+								})
+						});
+
 					setTimeout(() => {
 						let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
-						res.redirect('https://'+ redirectPrefix +'etherscan.io/address/' + myAddress);
+						res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
 					}, 5000);
 				} catch (e) {
 					// console.error(e);
@@ -128,39 +137,55 @@ app.listen(port, () => console.log("Listening on port: " + port));
 
 
 function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress) {
+	return new Promise((resolve, reject) => {
 
-	for (let i = 0; i < input.length; i++) {
-		var element = input[i];
+		for (let i = 0; i < input.length; i++) {
+			var element = input[i];
 
-		var toAddress = element.Address;
-		var amount = element.Amount;
-		var name = element.Name;
+			var toAddress = element.Address;
+			var amount = element.Amount;
+			var name = element.Name;
 
-		var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress);
-		var tx = new Tx(rawTransaction);
+			var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress);
+			var tx = new Tx(rawTransaction);
 
-		tx.sign(myPrivateKey);
-		var serializedTx = '0x' + tx.serialize().toString('hex');
+			tx.sign(myPrivateKey);
+			var serializedTx = '0x' + tx.serialize().toString('hex');
 
-		sendToken(serializedTx, toAddress, amount, name);
+			sendToken(serializedTx, toAddress, amount, name)
+				.catch((error) => {
+					console.log('Caught error in sendTokens!!!!');
+					reject(error);
+				})
 
-		transactionCount++;
-	}
+			transactionCount++;
+		}
+		console.log("sendTokens resolved");
+		resolve();
+	})
 }
 
 function sendToken(serializedTx, toAddress, amount, name) {
-	web3.eth.sendSignedTransaction(serializedTx)
-		.on('transactionHash', (hash) => {
-			let transactionRecord = {
-				Name: name,
-				Address: toAddress,
-				Amount: amount,
-				TxHash: hash
-			}
+	return new Promise((resolve, reject) => {
+		web3.eth.sendSignedTransaction(serializedTx)
+			.on('transactionHash', (hash) => {
+				let transactionRecord = {
+					Name: name,
+					Address: toAddress,
+					Amount: amount,
+					TxHash: hash
+				}
 
-			transactionRecords.push(transactionRecord);
-			console.log(hash);
-		})
+				transactionRecords.push(transactionRecord);
+				console.log(hash);
+				resolve();
+			})
+			.on('error', (error) => {
+				console.log('Insufficient funds or invalid private key!');
+				reject(error);
+			})
+
+	})
 }
 
 function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress) {
@@ -173,7 +198,6 @@ function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress
 		"to": contractAddress,
 		"value": web3.utils.toHex(0),
 		"data": data,
-		// "chainId": config.chainId,
 	}
 }
 
