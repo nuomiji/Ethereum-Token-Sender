@@ -69,34 +69,40 @@ app.post('/send', (req, res, next) => {
 				columns: true
 			});
 			request(etherscanURL, (error, response, data) => {
-				try {
-					var abiArray = JSON.parse(JSON.parse(data).result);
-					// console.log(abiArray);
-
-					var contract = new web3.eth.Contract(abiArray, contractAddress);
-
-					web3.eth.getTransactionCount(myAddress)
-						.then((transactionCount) => {
-
-							sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress)
-								.catch((error) => {
-									console.log("Caught error in main!!");
-									next('route');
-								})
-								.then(() => {
-									writeToCSV(input);
-								})
-						});
-
-					setTimeout(() => {
-						let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
-						res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
-					}, 5000);
-				} catch (e) {
-					// console.error(e);
-					console.log("There's an error!");
-					console.log(e);
+				if (JSON.parse(data).status === '0') {
+					console.log("Contract status not ok");
+					console.log(JSON.parse(data).result);
+					req.errorMessage = JSON.parse(data).result;
 					next('route');
+				} else {
+					try {
+						console.log("try block executed");
+						var abiArray = JSON.parse(JSON.parse(data).result);
+						var contract = new web3.eth.Contract(abiArray, contractAddress);
+
+						web3.eth.getTransactionCount(myAddress)
+							.then((transactionCount) => {
+
+								sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress)
+									.then(() => {
+										writeToCSV(input);
+										setTimeout(() => {
+											let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
+											console.log("Redirecting...");
+											res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
+										}, 5000);
+									}, (error) => {
+										console.log("Caught error in .catch!!");
+										req.errorMessage = error.message;
+										next('route');
+									});
+							});
+					} catch (e) {
+						console.log("There's an error! Outter catch block");
+						console.log(e);
+						req.errorMessage = e.message;
+						next('route');
+					}
 				}
 			});
 		}
@@ -106,7 +112,9 @@ app.post('/send', (req, res, next) => {
 
 app.post('/send', (req, res) => {
 	console.log("Bad Request");
-	res.sendStatus(400);
+	console.log(req.errorMessage);
+	// console.log(req.errorName);
+	res.status(400).send(req.errorMessage);
 })
 
 app.get('/wallet/keypair', (req, res) => {
@@ -137,32 +145,29 @@ app.listen(port, () => console.log("Listening on port: " + port));
 
 
 function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress) {
-	return new Promise((resolve, reject) => {
+	// return new Promise((resolve, reject) => {
+	var promises = [];
+	for (let i = 0; i < input.length; i++) {
+		var element = input[i];
 
-		for (let i = 0; i < input.length; i++) {
-			var element = input[i];
+		var toAddress = element.Address;
+		var amount = element.Amount;
+		var name = element.Name;
 
-			var toAddress = element.Address;
-			var amount = element.Amount;
-			var name = element.Name;
+		var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress);
+		var tx = new Tx(rawTransaction);
 
-			var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress);
-			var tx = new Tx(rawTransaction);
+		tx.sign(myPrivateKey);
+		var serializedTx = '0x' + tx.serialize().toString('hex');
 
-			tx.sign(myPrivateKey);
-			var serializedTx = '0x' + tx.serialize().toString('hex');
+		promises.push(sendToken(serializedTx, toAddress, amount, name))
 
-			sendToken(serializedTx, toAddress, amount, name)
-				.catch((error) => {
-					console.log('Caught error in sendTokens!!!!');
-					reject(error);
-				})
+		transactionCount++;
+	}
 
-			transactionCount++;
-		}
-		console.log("sendTokens resolved");
-		resolve();
-	})
+	return Promise.all(promises)
+
+	// })
 }
 
 function sendToken(serializedTx, toAddress, amount, name) {
@@ -181,7 +186,7 @@ function sendToken(serializedTx, toAddress, amount, name) {
 				resolve();
 			})
 			.on('error', (error) => {
-				console.log('Insufficient funds or invalid private key!');
+				// console.log('Insufficient funds or invalid private key!');
 				reject(error);
 			})
 
