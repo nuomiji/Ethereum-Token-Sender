@@ -34,5 +34,5 @@ To create new wallet, click on ```Create Wallet``` tab in navgation bar. There a
 - transfer Ether
 - singe transaction
 - user defined gas price
-
+- browserify
 
