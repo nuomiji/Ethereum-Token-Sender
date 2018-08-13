@@ -34,7 +34,7 @@ const Tx = require('ethereumjs-tx');
 const Web3 = require('web3');
 
 var transactionRecords = [];
-var web3;
+var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/vCfQu4uCspVZEATQTcmJ'));
 
 // app.use() specifies the middleware in handling a request
 app.use(bodyParser.urlencoded({
@@ -84,14 +84,14 @@ app.post('/send', (req, res, next) => {
 							.then((transactionCount) => {
 
 								sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress)
-									.then(() => {
+									.then(() => { // resolved
 										writeToCSV(input);
 										setTimeout(() => {
 											let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
 											console.log("Redirecting...");
 											res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
 										}, 5000);
-									}, (error) => {
+									}, (error) => { // rejected
 										console.log("Caught error in .catch!!");
 										req.errorMessage = error.message;
 										next('route');
