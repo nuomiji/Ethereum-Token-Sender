@@ -27,7 +27,7 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 - create password encrypted account and generate keystore file
 
 ### Select Token Type by Contract Address
-- defaults to a testing token on Ropsten test nest
+- currently implemented as dropdown selections
 
 ### Batch Transaction 
 - batch transaction done on given ERC20 token type (Ether transfer feature under development)
