@@ -15,7 +15,7 @@ install all dependencies <br />
 
 ## Usage
 ### Create Accounts
-To create new wallet, click on ```Create Wallet``` tab in navgation bar. There are two types of wallet creation:<br />
+The wallet creation module is hiden by default. To create new wallet, click on ```Create Wallet``` tab in navagation bar. There are two types of wallet creation:<br />
 - create account address and private key with a single click
 - create password encrypted account and generate keystore file
 
@@ -30,7 +30,7 @@ To create new wallet, click on ```Create Wallet``` tab in navgation bar. There a
 ### (single transaction under development)
 
 ## Todo's
-- keystore file download
+- ~~keystore file download~~
 - transfer Ether
 - singe transaction
 - user defined gas price
