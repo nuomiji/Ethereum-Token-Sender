@@ -24,8 +24,8 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 
 ### Batch Transaction 
 - batch transaction done on given ERC20 token type (Ether transfer feature under development)
-- upload recipients info in csv file under the following format: ```Name, Address, Amount```
-- webpage will be redirected to etherscan and transaction hashes will be generated in CSV formt under outputs folder
+- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
+- webpage will be redirected to ```Etherscan``` and transaction hashes will be generated in CSV formt under ```outputs``` folder
 
 ### (single transaction under development)
 
@@ -34,5 +34,5 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 - transfer Ether
 - singe transaction
 - user defined gas price
-- browserify
+- migrate all functionalities to client-side
 
