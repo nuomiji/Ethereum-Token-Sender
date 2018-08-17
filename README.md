@@ -30,7 +30,7 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 ### (single transaction under development)
 
 ## Todo's
-- ~~keystore file download~~
+- ~~keystore file download~~ ✓
 - transfer Ether
 - singe transaction
 - user defined gas price
