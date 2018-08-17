@@ -10,17 +10,24 @@ In Administrator Cmd: <br />
 set python path in npm: <br />
 ``` $ npm config set python C:\Users\YourName\.windows-build-tools\ ```
 
-install all dependencies <br />
+install all dependencies in the Ethereum-Token-Sender directory <br />
 ``` $ npm install -s ```
 
 ## Usage
+
+### To Run
+```bash
+nodemon server.js
+```
+Code is running on http://localhost:8080/
+
 ### Create Accounts
 The wallet creation module is hiden by default. To create new wallet, click on ```Create Wallet``` tab in navagation bar. There are two types of wallet creation:<br />
 - create account address and private key with a single click
 - create password encrypted account and generate keystore file
 
-### Select Token Type
-- inputs contract address (currently defaults to a testing token on Ropsten testnest)
+### Select Token Type by Contract Address
+- defaults to a testing token on Ropsten test nest
 
 ### Batch Transaction 
 - batch transaction done on given ERC20 token type (Ether transfer feature under development)
