@@ -1,6 +1,7 @@
 const config = require('./config/config.js');
 var express = require('express');
 var app = express();
+const path = require('path');
 const bodyParser = require('body-parser');
 const formidable = require('formidable');
 const fs = require('fs');
@@ -34,9 +35,15 @@ const Tx = require('ethereumjs-tx');
 const Web3 = require('web3');
 
 var transactionRecords = [];
-var web3;
+var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/vCfQu4uCspVZEATQTcmJ'));
 
 // app.use() specifies the middleware in handling a request
+
+app.get('/', (req, res, next) => {
+	res.redirect('http://localhost:8080/static/sendToken.html');
+});
+app.use('/static', express.static(path.join(__dirname, 'public')));
+
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
@@ -50,65 +57,61 @@ app.use(function(req, res, next) {
 app.post('/send', (req, res, next) => {
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
+		var myAddress = fields.fromAddress;
+		var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
+		var contractAddress = fields.contractAddress;
+		var chainId = fields.chainId;
+		var gasPrice = fields.gasPrice;
+		console.log("gasPrice", gasPrice);
+		let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
+		let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
+		let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
+		web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
+		let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
 
-		if (!fields.fromAddress || !fields.fromPrivateKey || files.destinations.size === 0) {
-			console.log("Invalid user input");
-		} else {
-			var myAddress = fields.fromAddress;
-			var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
-			var contractAddress = fields.contractAddress;
-			var chainId = fields.chainId;
-			let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
-			let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
-			let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
-			web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
-			let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
-			// console.log(etherscanURL);
+		input = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
+			columns: true
+		});
+		request(etherscanURL, (error, response, data) => {
+			if (JSON.parse(data).status === '0') {
+				console.log("Contract status not ok");
+				console.log(JSON.parse(data).result);
+				req.errorMessage = JSON.parse(data).result;
+				next('route');
+			} else {
+				try {
+					console.log("try block executed");
+					var abiArray = JSON.parse(JSON.parse(data).result);
+					var contract = new web3.eth.Contract(abiArray, contractAddress);
 
-			input = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
-				columns: true
-			});
-			request(etherscanURL, (error, response, data) => {
-				if (JSON.parse(data).status === '0') {
-					console.log("Contract status not ok");
-					console.log(JSON.parse(data).result);
-					req.errorMessage = JSON.parse(data).result;
+					web3.eth.getTransactionCount(myAddress)
+						.then((transactionCount) => {
+
+							sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress, gasPrice)
+								.then(() => { // resolved
+									writeToCSV(input);
+									setTimeout(() => {
+										let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
+										console.log("Redirecting...");
+										res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
+									}, 5000);
+								}, (error) => { // rejected
+									console.log("Caught error in .catch!!");
+									req.errorMessage = error.message;
+									next('route');
+								});
+						});
+				} catch (e) {
+					console.log("There's an error! Outter catch block");
+					console.log(e);
+					req.errorMessage = e.message;
 					next('route');
-				} else {
-					try {
-						console.log("try block executed");
-						var abiArray = JSON.parse(JSON.parse(data).result);
-						var contract = new web3.eth.Contract(abiArray, contractAddress);
-
-						web3.eth.getTransactionCount(myAddress)
-							.then((transactionCount) => {
-
-								sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress)
-									.then(() => {
-										writeToCSV(input);
-										setTimeout(() => {
-											let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
-											console.log("Redirecting...");
-											res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
-										}, 5000);
-									}, (error) => {
-										console.log("Caught error in .catch!!");
-										req.errorMessage = error.message;
-										next('route');
-									});
-							});
-					} catch (e) {
-						console.log("There's an error! Outter catch block");
-						console.log(e);
-						req.errorMessage = e.message;
-						next('route');
-					}
 				}
-			});
-		}
+			}
+		});
+
 	});
 });
-
 
 app.post('/send', (req, res) => {
 	console.log("Bad Request");
@@ -129,14 +132,12 @@ app.get('/wallet/keypair', (req, res) => {
 app.post('/wallet/keystore', (req, res) => {
 	// console.log(req.body.password);
 	var newAccount = web3.eth.accounts.create();
-	var keystore = newAccount.encrypt(req.body.password);
-	var wallet = {
-		address: newAccount.address,
-		privateKey: newAccount.privateKey,
-		keystore: keystore,
-	}
-	// console.log(wallet);
-	res.send(wallet);
+	var keystore = JSON.stringify(newAccount.encrypt(req.body.password));
+
+	res.setHeader('Content-disposition', 'attachment; filename=' + newAccount.address);
+	res.setHeader('Content-type', 'application/json');
+
+	res.send(keystore);
 })
 
 
@@ -144,8 +145,7 @@ var port = 8080;
 app.listen(port, () => console.log("Listening on port: " + port));
 
 
-function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress) {
-	// return new Promise((resolve, reject) => {
+function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress, gasPrice) {
 	var promises = [];
 	for (let i = 0; i < input.length; i++) {
 		var element = input[i];
@@ -154,7 +154,7 @@ function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, 
 		var amount = element.Amount;
 		var name = element.Name;
 
-		var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress);
+		var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress, gasPrice);
 		var tx = new Tx(rawTransaction);
 
 		tx.sign(myPrivateKey);
@@ -166,8 +166,6 @@ function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, 
 	}
 
 	return Promise.all(promises)
-
-	// })
 }
 
 function sendToken(serializedTx, toAddress, amount, name) {
@@ -178,7 +176,7 @@ function sendToken(serializedTx, toAddress, amount, name) {
 					Name: name,
 					Address: toAddress,
 					Amount: amount,
-					TxHash: hash
+					TxHash: hash,
 				}
 
 				transactionRecords.push(transactionRecord);
@@ -193,12 +191,12 @@ function sendToken(serializedTx, toAddress, amount, name) {
 	})
 }
 
-function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress) {
+function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress, gasPrice) {
 	var data = contract.methods.transfer(toAddress, amount).encodeABI();
 
 	return {
 		"nonce": nonce,
-		"gasPrice": Web3.utils.toHex(web3.utils.toWei(config.gasPrice, "shannon")),
+		"gasPrice": Web3.utils.toHex(web3.utils.toWei(gasPrice, "shannon")),
 		"gasLimit": web3.utils.toHex(config.gasLimit),
 		"to": contractAddress,
 		"value": web3.utils.toHex(0),
