@@ -10,29 +10,36 @@ In Administrator Cmd: <br />
 set python path in npm: <br />
 ``` $ npm config set python C:\Users\YourName\.windows-build-tools\ ```
 
-install all dependencies <br />
+install all dependencies in the Ethereum-Token-Sender directory <br />
 ``` $ npm install -s ```
 
 ## Usage
+
+### To Run
+```bash
+nodemon server.js
+```
+Code is running on http://localhost:8080/
+
 ### Create Accounts
-To create new wallet, click on ```Create Wallet``` tab in navgation bar. There are two types of wallet creation:<br />
+The wallet creation module is hiden by default. To create new wallet, click on ```Create Wallet``` tab in navagation bar. There are two types of wallet creation:<br />
 - create account address and private key with a single click
 - create password encrypted account and generate keystore file
 
-### Select Token Type
-- inputs contract address (currently defaults to a testing token on Ropsten testnest)
+### Select Token Type by Contract Address
+- currently implemented as dropdown selections
 
 ### Batch Transaction 
 - batch transaction done on given ERC20 token type (Ether transfer feature under development)
-- upload recipients info in csv file under the following format: ```Name, Address, Amount```
-- webpage will be redirected to etherscan and transaction hashes will be generated in CSV formt under outputs folder
+- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
+- webpage will be redirected to ```Etherscan``` and transaction hashes will be generated in CSV formt under ```outputs``` folder
 
 ### (single transaction under development)
 
 ## Todo's
-- keystore file download
-- transfer Ether
-- singe transaction
+- ~~keystore file download~~ ✓
 - user defined gas price
-- browserify
+- singe transaction
+- transfer Ether
+- migrate all functionalities to client-side
 
