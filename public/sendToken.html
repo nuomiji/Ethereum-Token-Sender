@@ -21,16 +21,6 @@
 				$("#CreateWallet").toggle();
 			});
 
-			$("form#KeystoreForm").submit(function() {
-				$.post($(this).attr('action'), $(this).serialize(), function(response) {
-					$("#Wallet").empty();
-					$("#Wallet").append($('<p></p>').text(response.address));
-					$("#Wallet").append($('<p></p>').text(response.privateKey));
-					$("#Wallet").append($('<p></p>').text(response.keystore));
-				}, 'json');
-				return false;
-			});
-
 		});
 	</script>
 </head>
@@ -49,7 +39,7 @@
 		<h1>Create New Wallet</h1>
 		<button id="CreateKeyPairButton">Create New Wallet</button>
 		<form id="KeystoreForm" action="http://localhost:8080/wallet/keystore" method="post">
-			<input type="password" name="password" placeholder="Please enter a strong password" />
+			<input type="password" name="password" placeholder="Please enter a strong password" pattern=".{8,}" required/>
 			<input type="submit" value="Create New Wallet with Password" />
 		</form>
 
@@ -65,10 +55,10 @@
 			<form action='http://localhost:8080/send' method="post" enctype="multipart/form-data">
 
 				<label for="fromAddress">From Address:</label>
-				<input type="text" name="fromAddress" placeholder="Enter your Account Address" />
+				<input type="text" name="fromAddress" placeholder="Enter your Account Address" required/>
 
 				<label for="fromPrivateKey">Your Private Key</label>
-				<input type="password" name="fromPrivateKey" placeholder="Enter your private key" />
+				<input type="password" name="fromPrivateKey" placeholder="Enter your private key" required/>
 
 				<select name="contractAddress">
 					<option value="0x14466590b32b83be64898fd8b70e1a050da0a9d0"> MyTestingToken </option>
@@ -80,9 +70,14 @@
 					<option value='0x01'> MainNet </option>
 				</select>
 
+				<label for='gasPrice'>Gas Price</label>
+				<input type="range" name='gasPrice' id='gasPriceSliderId' min='1' max="20" value="5" oninput="gasPriceTagId.value = gasPriceSliderId.value"/>
+				<output id="gasPriceTagId">5</output>
+
+
 				<div id="BatchTransaction">
 					<label for="destinations">Multiple Recipients:</label>
-					<input type="file" name="destinations" placeholder="List of Recipients" />
+					<input type="file" name="destinations" placeholder="List of Recipients" required/>
 				</div>
 
 				<!-- <div id="SingleTransaction"> <label for="toAddress" class="col-lg-2 control-label">To Address:</label> <input type="text" name="toAddress" placeholder="Enter your receipient" /> <label for="amount" class="col-lg-2 control-label">Transfer
@@ -92,9 +87,6 @@
 
 			</form>
 
-		</div>
-
-		<div id="ContractInfo">
 		</div>
 
 	</div>
