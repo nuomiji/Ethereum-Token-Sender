@@ -37,8 +37,6 @@ const Web3 = require('web3');
 var transactionRecords = [];
 var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/vCfQu4uCspVZEATQTcmJ'));
 
-// app.use() specifies the middleware in handling a request
-
 app.get('/', (req, res, next) => {
 	res.redirect('http://localhost:8080/static/sendToken.html');
 });
@@ -55,27 +53,30 @@ app.use(function(req, res, next) {
 });
 
 app.post('/send-token', parseUserInput, setupNetwork, (req, res, next) => {
+	console.log("getTransactionCount");
 	web3.eth.getTransactionCount(res.locals.myAddress)
 		.then((transactionCount) => {
+			console.log("sendTokens");
 			sendTokens(res.locals.myAddress, res.locals.myPrivateKey, {
-				transactionCount,
-				contract: res.locals.contract,
-				contractAddress: res.locals.contractAddress,
-				gasPrice: res.locals.gasPrice
-			}, res.locals.csvInput)
+					transactionCount,
+					contract: res.locals.contract,
+					contractAddress: res.locals.contractAddress,
+					gasPrice: res.locals.gasPrice
+				}, res.locals.csvInput)
+				.catch((error) => { // if rejected, go to error handling route
+					console.log("Caught error in .catch!!");
+					req.errorMessage = error.message;
+					next('route');
+				})
 		})
 		.then(() => {
+			console.log("writeToCSV");
 			writeToCSV(res.locals.csvInput);
 			setTimeout(() => {
 				let redirectPrefix = res.locals.chainId === '0x03' ? 'ropsten.' : '';
 				console.log("Redirecting...");
 				res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + res.locals.myAddress);
 			}, 5000)
-		})
-		.catch((error) => { // if rejected, go to error handling route
-			console.log("Caught error in .catch!!");
-			req.errorMessage = error.message;
-			next('route');
 		})
 })
 
@@ -95,7 +96,6 @@ app.get('/wallet/keypair', (req, res) => {
 });
 
 app.post('/wallet/keystore', (req, res) => {
-	// console.log(req.body.password);
 	var newAccount = web3.eth.accounts.create();
 	var keystore = JSON.stringify(newAccount.encrypt(req.body.password));
 
@@ -134,6 +134,7 @@ function sendTokens(myAddress, myPrivateKey, transactionInfo, csvInput) {
 }
 
 function sendToken(serializedTx, toAddress, amount, name) {
+	console.log("Starting in sendToken");
 	return new Promise((resolve, reject) => {
 		web3.eth.sendSignedTransaction(serializedTx)
 			.on('transactionHash', (hash) => {
@@ -148,6 +149,7 @@ function sendToken(serializedTx, toAddress, amount, name) {
 				resolve();
 			})
 			.on('error', (error) => {
+				console.log("rejected");
 				reject(error);
 			})
 	})
@@ -166,16 +168,6 @@ function buildRawTransaction(transactionInfo, toAddress, amount) {
 	}
 }
 
-async function writeToCSV(input) {
-	while (transactionRecords.length !== input.length) {
-		await delay(2000);
-	}
-	csvWriter.writeRecords(transactionRecords)
-		.then(() => {
-			console.log("...Done");
-		});
-}
-
 function parseUserInput(req, res, next) {
 	console.log("parseUserInput");
 	var form = new formidable.IncomingForm();
@@ -191,7 +183,6 @@ function parseUserInput(req, res, next) {
 		next();
 	})
 }
-
 
 function setupNetwork(req, res, next) {
 	console.log("setupNetwork");
@@ -212,4 +203,14 @@ function setupNetwork(req, res, next) {
 			next();
 		}
 	})
+}
+
+async function writeToCSV(input) {
+	while (transactionRecords.length !== input.length) {
+		await delay(2000);
+	}
+	csvWriter.writeRecords(transactionRecords)
+		.then(() => {
+			console.log("...Done");
+		});
 }
