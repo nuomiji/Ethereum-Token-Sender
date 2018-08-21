@@ -87,7 +87,15 @@ app.post('/send-token', (req, res, next) => {
 					web3.eth.getTransactionCount(myAddress)
 						.then((transactionCount) => {
 
-							sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress, gasPrice)
+							sendTokens(
+									myAddress,
+									myPrivateKey, {
+										transactionCount: transactionCount,
+										contract: contract,
+										contractAddress: contractAddress,
+										gasPrice: gasPrice,
+									},
+									input)
 								.then(() => { // resolved
 									writeToCSV(input);
 									setTimeout(() => {
@@ -145,16 +153,16 @@ var port = 8080;
 app.listen(port, () => console.log("Listening on port: " + port));
 
 
-function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, contractAddress, gasPrice) {
+function sendTokens(myAddress, myPrivateKey, transactionInfo, csvInput) {
 	var promises = [];
-	for (let i = 0; i < input.length; i++) {
-		var element = input[i];
+	for (let i = 0; i < csvInput.length; i++) {
+		var element = csvInput[i];
 
 		var toAddress = element.Address;
 		var amount = element.Amount;
 		var name = element.Name;
 
-		var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount, contract, contractAddress, gasPrice);
+		var rawTransaction = buildRawTransaction(transactionInfo, toAddress, amount);
 		var tx = new Tx(rawTransaction);
 
 		tx.sign(myPrivateKey);
@@ -162,7 +170,7 @@ function sendTokens(myAddress, myPrivateKey, input, transactionCount, contract, 
 
 		promises.push(sendToken(serializedTx, toAddress, amount, name))
 
-		transactionCount++;
+		transactionInfo.transactionCount++;
 	}
 
 	return Promise.all(promises)
@@ -191,14 +199,14 @@ function sendToken(serializedTx, toAddress, amount, name) {
 	})
 }
 
-function buildRawTransaction(nonce, toAddress, amount, contract, contractAddress, gasPrice) {
-	var data = contract.methods.transfer(toAddress, amount).encodeABI();
+function buildRawTransaction(transactionInfo, toAddress, amount) {
+	var data = transactionInfo.contract.methods.transfer(toAddress, amount).encodeABI();
 
 	return {
-		"nonce": nonce,
-		"gasPrice": Web3.utils.toHex(web3.utils.toWei(gasPrice, "shannon")),
+		"nonce": transactionInfo.transactionCount,
+		"gasPrice": Web3.utils.toHex(web3.utils.toWei(transactionInfo.gasPrice, "shannon")),
 		"gasLimit": web3.utils.toHex(config.gasLimit),
-		"to": contractAddress,
+		"to": transactionInfo.contractAddress,
 		"value": web3.utils.toHex(0),
 		"data": data,
 	}
