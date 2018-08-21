@@ -57,69 +57,54 @@ app.use(function(req, res, next) {
 app.post('/send-token', (req, res, next) => {
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
-		var myAddress = fields.fromAddress;
-		var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
-		var contractAddress = fields.contractAddress;
-		var chainId = fields.chainId;
-		var gasPrice = fields.gasPrice;
-		console.log("gasPrice", gasPrice);
-		let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
-		let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
-		let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
-		web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
-		let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
+			var myAddress = fields.fromAddress;
+			var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
+			var contractAddress = fields.contractAddress;
+			var chainId = fields.chainId;
+			var gasPrice = fields.gasPrice;
 
-		input = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
-			columns: true
-		});
-		request(etherscanURL, (error, response, data) => {
-			if (JSON.parse(data).status === '0') {
-				console.log("Contract status not ok");
-				console.log(JSON.parse(data).result);
-				req.errorMessage = JSON.parse(data).result;
-				next('route');
-			} else {
-				try {
-					console.log("try block executed");
-					var abiArray = JSON.parse(JSON.parse(data).result);
-					var contract = new web3.eth.Contract(abiArray, contractAddress);
+			let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
+			let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
+			web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
 
-					web3.eth.getTransactionCount(myAddress)
-						.then((transactionCount) => {
+			csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), { columns: true });
 
-							sendTokens(
-									myAddress,
-									myPrivateKey, {
-										transactionCount: transactionCount,
-										contract: contract,
-										contractAddress: contractAddress,
-										gasPrice: gasPrice,
-									},
-									input)
-								.then(() => { // resolved
-									writeToCSV(input);
-									setTimeout(() => {
-										let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
-										console.log("Redirecting...");
-										res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
-									}, 5000);
-								}, (error) => { // rejected
-									console.log("Caught error in .catch!!");
-									req.errorMessage = error.message;
-									next('route');
-								});
-						});
-				} catch (e) {
-					console.log("There's an error! Outter catch block");
-					console.log(e);
-					req.errorMessage = e.message;
-					next('route');
-				}
-			}
-		});
+			let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
+			let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
+			request(etherscanURL, (error, response, data) => {
+					if (JSON.parse(data).status === '0') {
+						req.errorMessage = JSON.parse(data).result;
+						next('route');
+					} else {
+						var abiArray = JSON.parse(JSON.parse(data).result);
+						var contract = new web3.eth.Contract(abiArray, contractAddress);
 
-	});
-});
+						web3.eth.getTransactionCount(myAddress)
+							.then((transactionCount) => {
+								sendTokens(myAddress, myPrivateKey, {
+									transactionCount,
+									contract,
+									contractAddress,
+									gasPrice
+								}, csvInput)
+							})
+							.then(() => {
+								writeToCSV(csvInput);
+								setTimeout(() => {
+									let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
+									console.log("Redirecting...");
+									res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
+								}, 5000)
+							})
+							.catch((error) => { // rejected
+								console.log("Caught error in .catch!!");
+								req.errorMessage = error.message;
+								next('route');
+							})
+					}
+			})
+	})
+})
 
 app.post('/send-token', (req, res) => {
 	console.log("Bad Request");
