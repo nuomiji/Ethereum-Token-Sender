@@ -54,62 +54,34 @@ app.use(function(req, res, next) {
 	next();
 });
 
-app.post('/send-token', (req, res, next) => {
-	var form = new formidable.IncomingForm();
-	form.parse(req, (err, fields, files) => {
-			var myAddress = fields.fromAddress;
-			var myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
-			var contractAddress = fields.contractAddress;
-			var chainId = fields.chainId;
-			var gasPrice = fields.gasPrice;
-
-			let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
-			let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
-			web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
-
-			csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), { columns: true });
-
-			let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
-			let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + contractAddress + '&apikey=' + config.etherscanApiKey;
-			request(etherscanURL, (error, response, data) => {
-					if (JSON.parse(data).status === '0') {
-						req.errorMessage = JSON.parse(data).result;
-						next('route');
-					} else {
-						var abiArray = JSON.parse(JSON.parse(data).result);
-						var contract = new web3.eth.Contract(abiArray, contractAddress);
-
-						web3.eth.getTransactionCount(myAddress)
-							.then((transactionCount) => {
-								sendTokens(myAddress, myPrivateKey, {
-									transactionCount,
-									contract,
-									contractAddress,
-									gasPrice
-								}, csvInput)
-							})
-							.then(() => {
-								writeToCSV(csvInput);
-								setTimeout(() => {
-									let redirectPrefix = chainId === '0x03' ? 'ropsten.' : '';
-									console.log("Redirecting...");
-									res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + myAddress);
-								}, 5000)
-							})
-							.catch((error) => { // rejected
-								console.log("Caught error in .catch!!");
-								req.errorMessage = error.message;
-								next('route');
-							})
-					}
-			})
-	})
+app.post('/send-token', parseUserInput, setupNetwork, (req, res, next) => {
+	web3.eth.getTransactionCount(res.locals.myAddress)
+		.then((transactionCount) => {
+			sendTokens(res.locals.myAddress, res.locals.myPrivateKey, {
+				transactionCount,
+				contract: res.locals.contract,
+				contractAddress: res.locals.contractAddress,
+				gasPrice: res.locals.gasPrice
+			}, res.locals.csvInput)
+		})
+		.then(() => {
+			writeToCSV(res.locals.csvInput);
+			setTimeout(() => {
+				let redirectPrefix = res.locals.chainId === '0x03' ? 'ropsten.' : '';
+				console.log("Redirecting...");
+				res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + res.locals.myAddress);
+			}, 5000)
+		})
+		.catch((error) => { // if rejected, go to error handling route
+			console.log("Caught error in .catch!!");
+			req.errorMessage = error.message;
+			next('route');
+		})
 })
 
 app.post('/send-token', (req, res) => {
 	console.log("Bad Request");
 	console.log(req.errorMessage);
-	// console.log(req.errorName);
 	res.status(400).send(req.errorMessage);
 })
 
@@ -171,16 +143,13 @@ function sendToken(serializedTx, toAddress, amount, name) {
 					Amount: amount,
 					TxHash: hash,
 				}
-
 				transactionRecords.push(transactionRecord);
 				console.log(hash);
 				resolve();
 			})
 			.on('error', (error) => {
-				// console.log('Insufficient funds or invalid private key!');
 				reject(error);
 			})
-
 	})
 }
 
@@ -205,4 +174,42 @@ async function writeToCSV(input) {
 		.then(() => {
 			console.log("...Done");
 		});
+}
+
+function parseUserInput(req, res, next) {
+	console.log("parseUserInput");
+	var form = new formidable.IncomingForm();
+	form.parse(req, (err, fields, files) => {
+		res.locals.myAddress = fields.fromAddress;
+		res.locals.myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
+		res.locals.contractAddress = fields.contractAddress;
+		res.locals.chainId = fields.chainId;
+		res.locals.gasPrice = fields.gasPrice;
+		res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
+			columns: true
+		})
+		next();
+	})
+}
+
+
+function setupNetwork(req, res, next) {
+	console.log("setupNetwork");
+	var chainId = res.locals.chainId;
+	let providerPrefix = chainId === '0x03' ? 'ropsten' : 'mainnet';
+	let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
+	web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
+
+	let etherscanPrefix = chainId === '0x03' ? '-ropsten' : '';
+	let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + res.locals.contractAddress + '&apikey=' + config.etherscanApiKey;
+	request(etherscanURL, (error, response, data) => {
+		if (JSON.parse(data).status === '0') {
+			req.errorMessage = JSON.parse(data).result;
+			next('route');
+		} else {
+			var abiArray = JSON.parse(JSON.parse(data).result);
+			res.locals.contract = new web3.eth.Contract(abiArray, res.locals.contractAddress);
+			next();
+		}
+	})
 }
