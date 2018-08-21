@@ -54,7 +54,7 @@ app.use(function(req, res, next) {
 	next();
 });
 
-app.post('/send', (req, res, next) => {
+app.post('/send-token', (req, res, next) => {
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
 		var myAddress = fields.fromAddress;
@@ -113,7 +113,7 @@ app.post('/send', (req, res, next) => {
 	});
 });
 
-app.post('/send', (req, res) => {
+app.post('/send-token', (req, res) => {
 	console.log("Bad Request");
 	console.log(req.errorMessage);
 	// console.log(req.errorName);
