@@ -32,7 +32,7 @@ const web3 = require('../web3/web3.js');
 
 var transactionRecords = [];
 
-router.post('/', parseUserInput, (req, res, next) => {
+router.post('/', parseUserInput, web3.setupNetwork, web3.getContract, (req, res, next) => {
 	console.log("sendTokens");
 	web3.sendTokens(res.locals.myAddress, res.locals.myPrivateKey, {
 				chainId: res.locals.chainId,
@@ -85,10 +85,6 @@ function parseUserInput(req, res, next) {
 		next();
 	})
 }
-
-
-
-
 
 async function writeToCSV(transactionRecords) {
 	console.log("writeToCSV");
