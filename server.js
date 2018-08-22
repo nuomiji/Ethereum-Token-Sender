@@ -1,5 +1,3 @@
-const wallet = require('./routes/wallet');
-const tokenSender = require('./routes/token-sender')
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -20,11 +18,17 @@ app.use(function(req, res, next) {
 	next();
 });
 
+const wallet = require('./routes/wallet');
+const tokenSender = require('./routes/token-sender');
+const etherSender = require('./routes/ether-sender');
+
 app.use('/wallet', wallet);
 
 app.use('/send-token', tokenSender);
 
-app.use('/send-token', (req, res) => {
+app.use('/send-ether', etherSender);
+
+app.use('/', (req, res) => {
 	console.log("Bad Request");
 	console.log(req.errorMessage);
 	res.status(400).send(req.errorMessage);

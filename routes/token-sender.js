@@ -10,7 +10,7 @@ const Tx = require('ethereumjs-tx');
 const delay = require('delay');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
-	path: './outputs/transactions.csv',
+	path: './outputs/transactions-token.csv',
 	header: [{
 			id: 'Name',
 			title: 'Name'
