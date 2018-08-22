@@ -19,14 +19,11 @@ app.use(function(req, res, next) {
 });
 
 const wallet = require('./routes/wallet');
-const tokenSender = require('./routes/token-sender');
-const etherSender = require('./routes/ether-sender');
+const send = require('./routes/transactions');
 
 app.use('/wallet', wallet);
 
-app.use('/send-token', tokenSender);
-
-app.use('/send-ether', etherSender);
+app.use('/send', send);
 
 app.use('/', (req, res) => {
 	console.log("Bad Request");
