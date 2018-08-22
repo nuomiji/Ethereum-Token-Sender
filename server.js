@@ -86,25 +86,8 @@ app.post('/send-token', (req, res) => {
 	res.status(400).send(req.errorMessage);
 })
 
-app.get('/wallet/keypair', (req, res) => {
-	var newAccount = web3.eth.accounts.create();
-	var keyPair = {
-		address: newAccount.address,
-		privateKey: newAccount.privateKey,
-	}
-	res.send(keyPair);
-});
-
-app.post('/wallet/keystore', (req, res) => {
-	var newAccount = web3.eth.accounts.create();
-	var keystore = JSON.stringify(newAccount.encrypt(req.body.password));
-
-	res.setHeader('Content-disposition', 'attachment; filename=' + newAccount.address);
-	res.setHeader('Content-type', 'application/json');
-
-	res.send(keystore);
-})
-
+var wallet = require('./routes/wallet');
+app.use('/wallet', wallet);
 
 var port = 8080;
 app.listen(port, () => console.log("Listening on port: " + port));
