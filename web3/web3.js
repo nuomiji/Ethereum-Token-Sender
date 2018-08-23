@@ -3,7 +3,6 @@ const Tx = require('ethereumjs-tx');
 const config = require('../config/config.js');
 const request = require('request');
 
-var transactionRecords = [];
 var web3;
 
 function sendToken(serializedTx, toAddress, amount, name) {
@@ -17,7 +16,6 @@ function sendToken(serializedTx, toAddress, amount, name) {
 					Amount: amount,
 					TxHash: hash,
 				}
-				transactionRecords.push(transactionRecord);
 				console.log(hash);
 				resolve(transactionRecord);
 			})
@@ -70,7 +68,12 @@ module.exports = {
 						var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount);
 						var tx = new Tx(rawTransaction);
 
-						tx.sign(myPrivateKey);
+						try {
+							tx.sign(myPrivateKey);
+						} catch (e) {
+							reject(e);
+							return;
+						}
 						var serializedTx = '0x' + tx.serialize().toString('hex');
 
 						promises.push(sendToken(serializedTx, toAddress, amount, name))

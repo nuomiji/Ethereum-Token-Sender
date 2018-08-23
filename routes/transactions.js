@@ -1,23 +1,25 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const Web3 = require('web3');
 const formidable = require('formidable');
 const parse = require('csv-parse/lib/sync');
 const fs = require('fs');
-const config = require('../config/config.js');
 const delay = require('delay');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
+const config = require('../config/config.js');
 const web3 = require('../web3/web3.js');
 
+// parse user input from form and setup Web3 instance in the correct chain
 router.use('/', parseUserInput, web3.setupNetwork);
 
+// token transfer transactions
 router.post('/token', web3.getContract, (req, res, next) => {
 	console.log("sendTokens");
 	web3.sendTxs(res.locals.myAddress,
 			res.locals.myPrivateKey,
 			res.locals.csvInput,
-			buildRawTransaction(res.locals.contract, res.locals.contractAddress, res.locals.gasPrice))
+			buildRawTokenTransaction(res.locals.contract, res.locals.contractAddress, res.locals.gasPrice))
 		.then((transactionRecords) => {
 			writeToCSV(transactionRecords, "token");
 			next();
@@ -28,6 +30,7 @@ router.post('/token', web3.getContract, (req, res, next) => {
 		})
 }, redirect)
 
+// ether transfer transactions
 router.post('/ether', (req, res, next) => {
 	console.log("sendEthers");
 	web3.sendTxs(res.locals.myAddress,
@@ -44,7 +47,8 @@ router.post('/ether', (req, res, next) => {
 		})
 }, redirect)
 
-function buildRawTransaction(contract, contractAddress, gasPrice) {
+
+function buildRawTokenTransaction(contract, contractAddress, gasPrice) {
 
 	return function(nonce, toAddress, amount) {
 		var data = contract.methods.transfer(toAddress, amount).encodeABI();
