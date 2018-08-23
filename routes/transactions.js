@@ -20,15 +20,13 @@ router.post('/token', web3.getContract, (req, res, next) => {
 	web3.sendTxs(res.locals,
 			web3.buildRawTokenTx(res.locals))
 		.then((transactionRecords) => {
-			console.log("transactionRecords:", transactionRecords);
 			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
-			console.log("Caught error in .catch!!");
 			req.errorMessage = reason.message;
-			next('route');
+			next(reason);
 		})
-}, writeToCSV, redirect)
+})
 
 // ether transfer transactions
 router.post('/ether', (req, res, next) => {
@@ -37,17 +35,15 @@ router.post('/ether', (req, res, next) => {
 	web3.sendTxs(res.locals,
 			web3.buildRawEthTx(res.locals))
 		.then((transactionRecords) => {
-			console.log("transactionRecords:", transactionRecords);
 			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
-			console.log("Caught error in .catch!!");
 			req.errorMessage = reason.message;
-			next('route');
+			next(reason);
 		})
-}, writeToCSV, redirect)
+})
 
-// router.use('/', writeToCSV, redirect);
+router.use('/', writeToCSV, redirect);
 
 function parseUserInput(req, res, next) {
 	console.log("parseUserInput");
@@ -56,9 +52,7 @@ function parseUserInput(req, res, next) {
 		res.locals.myAddress = fields.fromAddress;
 		res.locals.myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
 		res.locals.contractAddress = fields.contractAddress;
-		if (typeof fields.chainId !== 'undefined') {
-			res.locals.chainId = fields.chainId;
-		}
+		res.locals.chainId = fields.chainId;
 		res.locals.gasPrice = fields.gasPrice;
 		res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
 			columns: true
@@ -92,7 +86,7 @@ function writeToCSV(req, res, next) {
 			console.log("...Done");
 		});
 
-		next();
+	next();
 }
 
 function redirect(req, res) {

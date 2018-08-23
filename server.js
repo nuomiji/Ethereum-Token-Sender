@@ -25,7 +25,7 @@ app.use('/wallet', wallet);
 
 app.use('/send', send);
 
-app.use('/', (req, res) => {
+app.use('/', (err, req, res, next) => {
 	console.log("Bad Request");
 	console.log(req.errorMessage);
 	res.status(400).send(req.errorMessage);
