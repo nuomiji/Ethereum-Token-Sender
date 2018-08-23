@@ -15,33 +15,39 @@ router.use('/', parseUserInput, web3.setupNetwork);
 
 // token transfer transactions
 router.post('/token', web3.getContract, (req, res, next) => {
+	res.locals.isTokenTx = true;
 	console.log("sendTokens");
 	web3.sendTxs(res.locals,
 			web3.buildRawTokenTx(res.locals))
 		.then((transactionRecords) => {
-			writeToCSV(transactionRecords, "token");
+			console.log("transactionRecords:", transactionRecords);
+			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
 			console.log("Caught error in .catch!!");
 			req.errorMessage = reason.message;
 			next('route');
 		})
-}, redirect)
+}, writeToCSV, redirect)
 
 // ether transfer transactions
 router.post('/ether', (req, res, next) => {
+	res.locals.isTokenTx = false;
 	console.log("sendEthers");
 	web3.sendTxs(res.locals,
 			web3.buildRawEthTx(res.locals))
 		.then((transactionRecords) => {
-			writeToCSV(transactionRecords, "ether");
+			console.log("transactionRecords:", transactionRecords);
+			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
 			console.log("Caught error in .catch!!");
 			req.errorMessage = reason.message;
 			next('route');
 		})
-}, redirect)
+}, writeToCSV, redirect)
+
+// router.use('/', writeToCSV, redirect);
 
 function parseUserInput(req, res, next) {
 	console.log("parseUserInput");
@@ -61,18 +67,32 @@ function parseUserInput(req, res, next) {
 	})
 }
 
-function writeToCSV(transactionRecords, txType) {
-
+function writeToCSV(req, res, next) {
+	var txType = res.locals.isTokenTx ? 'token' : 'ether';
 	var csvWriter = createCsvWriter({
 		path: './outputs/transactions-' + txType + '.csv',
-		header: [{ id: 'Name', title: 'Name' }, { id: 'Address', title: 'Address' }, { id: 'Amount', title: 'Amount' }, { id: 'TxHash', title: 'TxHash' }, ]
+		header: [{
+			id: 'Name',
+			title: 'Name'
+		}, {
+			id: 'Address',
+			title: 'Address'
+		}, {
+			id: 'Amount',
+			title: 'Amount'
+		}, {
+			id: 'TxHash',
+			title: 'TxHash'
+		}, ]
 	});
 
 	console.log("writeToCSV");
-	csvWriter.writeRecords(transactionRecords)
+	csvWriter.writeRecords(res.locals.transactionRecords)
 		.then(() => {
 			console.log("...Done");
 		});
+
+		next();
 }
 
 function redirect(req, res) {
@@ -80,7 +100,7 @@ function redirect(req, res) {
 		let redirectPrefix = res.locals.chainId === '0x03' ? 'ropsten.' : '';
 		console.log("Redirecting...");
 		res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + res.locals.myAddress);
-	}, 3000)
+	}, 2000)
 }
 
 module.exports = router;
