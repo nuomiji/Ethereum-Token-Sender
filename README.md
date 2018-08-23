@@ -28,14 +28,14 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 
 ### Send Token
 - batch transaction done on given ERC20 token type 
-- contract selection currently implemented as dropdown selection
+- contract selection currently implemented as dropdown
 - network selection implemented as dropdown selection
 - upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
 - webpage will be redirected to ```Etherscan``` and transaction hashes will be generated in CSV formt under ```outputs``` folder
 
 ### Send Ether
 - batch transaction on Ether
-- network selection implemented as dropdown selection
+- network selection implemented as dropdown
 - upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
 - webpage will be redirected to ```Etherscan``` and transaction hashes will be generated in CSV formt under ```outputs``` folder
 
