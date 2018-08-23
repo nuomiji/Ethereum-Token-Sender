@@ -11,7 +11,7 @@ const config = require('../config/config.js');
 const web3 = require('../web3/web3.js');
 
 // parse user input from form and setup Web3 instance in the correct chain
-router.use('/', parseUserInput, web3.setupNetwork);
+router.use(parseUserInput, web3.setupNetwork);
 
 // token transfer transactions
 router.post('/token', web3.getContract, (req, res, next) => {
@@ -23,7 +23,7 @@ router.post('/token', web3.getContract, (req, res, next) => {
 			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
-			req.errorMessage = reason.message;
+			console.log(reason);
 			next(reason);
 		})
 })
@@ -38,12 +38,11 @@ router.post('/ether', (req, res, next) => {
 			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
-			req.errorMessage = reason.message;
 			next(reason);
 		})
 })
 
-router.use('/', writeToCSV, redirect);
+router.use(writeToCSV, redirect);
 
 function parseUserInput(req, res, next) {
 	console.log("parseUserInput");

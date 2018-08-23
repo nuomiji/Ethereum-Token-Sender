@@ -44,7 +44,7 @@ module.exports = {
 		request(etherscanURL, (error, response, data) => {
 			if (JSON.parse(data).status === '0') {
 				req.errorMessage = JSON.parse(data).result;
-				next('route');
+				next(new Error(req.errorMessage));
 			} else {
 				var abiArray = JSON.parse(JSON.parse(data).result);
 				res.locals.contract = new web3.eth.Contract(abiArray, res.locals.contractAddress);
