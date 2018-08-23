@@ -16,10 +16,8 @@ router.use('/', parseUserInput, web3.setupNetwork);
 // token transfer transactions
 router.post('/token', web3.getContract, (req, res, next) => {
 	console.log("sendTokens");
-	web3.sendTxs(res.locals.myAddress,
-			res.locals.myPrivateKey,
-			res.locals.csvInput,
-			buildRawTokenTransaction(res.locals.contract, res.locals.contractAddress, res.locals.gasPrice))
+	web3.sendTxs(res.locals,
+			web3.buildRawTokenTx(res.locals))
 		.then((transactionRecords) => {
 			writeToCSV(transactionRecords, "token");
 			next();
@@ -33,10 +31,8 @@ router.post('/token', web3.getContract, (req, res, next) => {
 // ether transfer transactions
 router.post('/ether', (req, res, next) => {
 	console.log("sendEthers");
-	web3.sendTxs(res.locals.myAddress,
-			res.locals.myPrivateKey,
-			res.locals.csvInput,
-			buildRawEtherTransaction(res.locals.gasPrice))
+	web3.sendTxs(res.locals,
+			web3.buildRawEthTx(res.locals))
 		.then((transactionRecords) => {
 			writeToCSV(transactionRecords, "ether");
 			next();
@@ -46,36 +42,6 @@ router.post('/ether', (req, res, next) => {
 			next('route');
 		})
 }, redirect)
-
-
-function buildRawTokenTransaction(contract, contractAddress, gasPrice) {
-
-	return function(nonce, toAddress, amount) {
-		var data = contract.methods.transfer(toAddress, amount).encodeABI();
-
-		return {
-			"nonce": nonce,
-			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(gasPrice, "shannon")),
-			"gasLimit": Web3.utils.toHex(config.gasLimit),
-			"to": contractAddress,
-			"value": Web3.utils.toHex(0),
-			"data": data,
-		}
-	}
-}
-
-function buildRawEtherTransaction(gasPrice) {
-
-	return function(nonce, toAddress, amount) {
-		return {
-			"nonce": nonce,
-			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(gasPrice, "shannon")),
-			"gasLimit": Web3.utils.toHex(config.gasLimit),
-			"to": toAddress,
-			"value": Web3.utils.toHex(amount)
-		}
-	}
-}
 
 function parseUserInput(req, res, next) {
 	console.log("parseUserInput");

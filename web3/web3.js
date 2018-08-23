@@ -53,14 +53,14 @@ module.exports = {
 		})
 	},
 
-	sendTxs: function(myAddress, myPrivateKey, csvInput, buildRawTransaction) {
+	sendTxs: function(txInfo, buildRawTransaction) {
 		return new Promise((resolve, reject) => {
-			web3.eth.getTransactionCount(myAddress)
+			web3.eth.getTransactionCount(txInfo.myAddress)
 				.then((transactionCount) => {
 					console.log("transactionCount:", transactionCount);
 					var promises = [];
-					for (let i = 0; i < csvInput.length; i++) {
-						var element = csvInput[i];
+					for (let i = 0; i < txInfo.csvInput.length; i++) {
+						var element = txInfo.csvInput[i];
 						var toAddress = element.Address;
 						var amount = element.Amount;
 						var name = element.Name;
@@ -69,7 +69,7 @@ module.exports = {
 						var tx = new Tx(rawTransaction);
 
 						try {
-							tx.sign(myPrivateKey);
+							tx.sign(txInfo.myPrivateKey);
 						} catch (e) {
 							reject(e);
 							return;
@@ -90,5 +90,34 @@ module.exports = {
 				})
 
 		})
+	},
+
+	buildRawTokenTx: function(txInfo) {
+
+		return function(nonce, toAddress, amount) {
+			var data = txInfo.contract.methods.transfer(toAddress, amount).encodeABI();
+
+			return {
+				"nonce": nonce,
+				"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+				"gasLimit": Web3.utils.toHex(config.gasLimit),
+				"to": txInfo.contractAddress,
+				"value": Web3.utils.toHex(0),
+				"data": data,
+			}
+		}
+	},
+
+	buildRawEthTx: function(txInfo) {
+
+		return function(nonce, toAddress, amount) {
+			return {
+				"nonce": nonce,
+				"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+				"gasLimit": Web3.utils.toHex(config.gasLimit),
+				"to": toAddress,
+				"value": Web3.utils.toHex(amount)
+			}
+		}
 	}
 }
