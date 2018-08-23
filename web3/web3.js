@@ -8,7 +8,6 @@ var web3;
 
 function sendToken(serializedTx, toAddress, amount, name) {
 
-	console.log("Starting in sendToken");
 	return new Promise((resolve, reject) => {
 		web3.eth.sendSignedTransaction(serializedTx)
 			.on('transactionHash', (hash) => {
@@ -56,12 +55,11 @@ module.exports = {
 		})
 	},
 
-	sendTokens: function(myAddress, myPrivateKey, transactionInfo, csvInput, buildRawTransaction) {
+	sendTxs: function(myAddress, myPrivateKey, csvInput, buildRawTransaction) {
 		return new Promise((resolve, reject) => {
 			web3.eth.getTransactionCount(myAddress)
 				.then((transactionCount) => {
 					console.log("transactionCount:", transactionCount);
-					transactionInfo.transactionCount = transactionCount;
 					var promises = [];
 					for (let i = 0; i < csvInput.length; i++) {
 						var element = csvInput[i];
@@ -69,7 +67,7 @@ module.exports = {
 						var amount = element.Amount;
 						var name = element.Name;
 
-						var rawTransaction = buildRawTransaction(transactionInfo, toAddress, amount);
+						var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount);
 						var tx = new Tx(rawTransaction);
 
 						tx.sign(myPrivateKey);
@@ -77,7 +75,7 @@ module.exports = {
 
 						promises.push(sendToken(serializedTx, toAddress, amount, name))
 
-						transactionInfo.transactionCount++;
+						transactionCount++;
 					}
 
 					Promise.all(promises)
