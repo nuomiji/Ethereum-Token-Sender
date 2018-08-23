@@ -23,7 +23,7 @@ router.post('/token', web3.getContract, (req, res, next) => {
 			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
-			req.errorMessage = reason.message;
+			console.log(reason);
 			next(reason);
 		})
 })
@@ -38,7 +38,6 @@ router.post('/ether', (req, res, next) => {
 			res.locals.transactionRecords = transactionRecords;
 			next();
 		}, (reason) => { // if rejected, go to error handling route
-			req.errorMessage = reason.message;
 			next(reason);
 		})
 })
