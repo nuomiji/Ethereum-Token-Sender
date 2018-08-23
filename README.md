@@ -39,7 +39,7 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 ## Todo's
 - ~~keystore file download~~ ✓
 - ~~~user defined gas price~~~ ✓
-- singe transaction
-- transfer Ether
+- single transaction
+- ~~~transfer Ether~~~ ✓
 - migrate all functionalities to client-side
 
