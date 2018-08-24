@@ -29,6 +29,11 @@
 			$("#send-token-tab").click(function() {
 				$("#EtherSender").hide();
 				$("#TokenSender").show();
+			});
+
+			$("#transactionToggle").click(function() {
+				$("#BatchTransaction").toggle();
+				$("#SingleTransaction").toggle();
 			})
 
 		});
@@ -70,10 +75,8 @@
 				<label for="fromPrivateKey">Your Private Key</label>
 				<input type="password" name="fromPrivateKey" placeholder="Enter your private key" required/>
 
-				<select name="contractAddress">
-					<option value="0x14466590b32b83be64898fd8b70e1a050da0a9d0"> MyTestingToken </option>
-					<option value="0x7790Fb25768658a01b76f5a8dA50E4b4EAf94183"> mainnet token </option>
-				</select>
+				<label for="contractAddress">Contract Address</label>
+				<input type="text" value="0x14466590b32b83be64898fd8b70e1a050da0a9d0" required name="contractAddress" />
 
 				<select name='chainId'>
 					<option value='0x03'> Ropsten TestNet</option>
@@ -81,17 +84,22 @@
 				</select>
 
 				<label for='gasPrice'>Gas Price</label>
-				<input type="range" name='gasPrice' id='gasPriceSliderId' min='1' max="20" value="5" oninput="gasPriceTagId.value = gasPriceSliderId.value" />
+				<input type="range" name='gasPrice' id='gasPriceSliderId' min='1' max="20" value="5" step="0.1" oninput="gasPriceTagId.value = gasPriceSliderId.value" />
 				<output id="gasPriceTagId">5</output>
 
+				<button type="button" id="transactionToggle"> Send Single Transaction</button>
 
 				<div id="BatchTransaction">
 					<label for="destinations">Multiple Recipients:</label>
 					<input type="file" name="destinations" placeholder="List of Recipients" required/>
 				</div>
 
-				<!-- <div id="SingleTransaction"> <label for="toAddress" class="col-lg-2 control-label">To Address:</label> <input type="text" name="toAddress" placeholder="Enter your receipient" /> <label for="amount" class="col-lg-2 control-label">Transfer
-		Amount:</label> <input type="text" name="amount" placeholder="Enter amount" /> </div> -->
+				<div id="SingleTransaction" style="display:none">
+					<label for="toAddress" class="col-lg-2 control-label">To Address:</label>
+					<input type="text" name="toAddress" placeholder="Enter your receipient" />
+					<label for="amount" class="col-lg-2 control-label">Transfer Amount:</label>
+					<input type="text" name="amount" placeholder="Enter amount" />
+				</div>
 
 				<input type="submit" value="Send Token" />
 
@@ -104,7 +112,7 @@
 
 
 
-	<div id="EtherSender" class="container" style="display: none">
+	<div id="EtherSender" class="container" style="display:none">
 		<h1> Ether Sender </h1>
 		<form action='http://localhost:8080/send/ether' method="post" enctype="multipart/form-data">
 			<label for="fromAddress">From Address:</label>
