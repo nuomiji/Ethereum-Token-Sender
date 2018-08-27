@@ -116,7 +116,21 @@ module.exports = {
 		})
 	},
 
-	sendATx: sendATx,
+	sendTx: function(txInfo, buildTx) {
+		return new Promise((resolve, reject) => {
+			web3.eth.getTransactionCount(txInfo.myAddress)
+				.then((transactionCount) => {
+					console.log("sendTx: transactionCount:", transactionCount);
+					txInfo.txCount = transactionCount;
+					sendATx(txInfo, buildTx)
+						.then((transactionRecord) => {
+							resolve(transactionRecord);
+						}, (reason) => {
+							reject(reason);
+						})
+				})
+		})
+	},
 
 	buildTokenTx: function(txInfo) {
 		var data = txInfo.contract.methods.transfer(txInfo.toAddress, txInfo.amount).encodeABI();

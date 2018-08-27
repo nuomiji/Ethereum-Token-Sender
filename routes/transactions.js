@@ -11,45 +11,27 @@ const config = require('../config/config.js');
 const web3 = require('../web3/web3.js');
 
 // parse user input from form and setup Web3 instance in the correct chain
-router.use(parseUserInput, web3.setupNetwork);
+router.use("/batch", parseUserInputBatch, web3.setupNetwork);
 
-// token transfer transactions
-// router.post('/token', web3.getContract, (req, res, next) => {
-// 	res.locals.isTokenTx = true;
-// 	console.log("sendTokens");
-// 	web3.sendTxs(res.locals,
-// 			web3.buildRawTokenTx(res.locals))
-// 		.then((transactionRecords) => {
-// 			res.locals.transactionRecords = transactionRecords;
-// 			next();
-// 		}, (reason) => { // if rejected, go to error handling route
-// 			console.log(reason);
-// 			next(reason);
-// 		})
-// })
+router.use('/single', parseUserInputSingle, web3.setupNetwork);
 
-router.use('/token', web3.getContract);
-
-router.post('/token/single', (req, res, next) => {
+router.post('/single/token', web3.getContract, (req, res, next) => {
 	res.locals.isTokenTx = true;
-	console.log("SendTokensSingle");
-	web3.eth.getTransactionCount(res.locals.myAddress)
-		.then((txCount) => {
-			console.log("transactionCount:", txCount);
-			res.locals.txCount = txCount;
-			web3.sendTx(res.locals,
-					web3.buildTokenTx)
-				.then((transactionRecord) => {
-					res.locals.transactionRecords = [transactionRecord];
-					next();
-				}, (reason) => {
-					console.log(reason);
-					next(reason);
-				})
+	console.log("SendTokenSingle");
+	// console.log("/single/token: res.locals:", res.locals);
+	web3.sendTx(res.locals,
+			web3.buildTokenTx)
+		.then((transactionRecord) => {
+			res.locals.transactionRecords = [transactionRecord];
+			next();
+		}, (reason) => {
+			console.log("error!");
+			console.log(reason);
+			next(reason);
 		})
 })
 
-router.post('/token', (req, res, next) => {
+router.post('/batch/token', web3.getContract, (req, res, next) => {
 	res.locals.isTokenTx = true;
 	console.log("SendTokensBatch");
 	web3.sendTxs(res.locals,
@@ -80,8 +62,8 @@ router.post('/ether', (req, res, next) => {
 
 router.use(writeToCSV, redirect);
 
-function parseUserInput(req, res, next) {
-	console.log("parseUserInput");
+function parseUserInputBatch(req, res, next) {
+	console.log("parseUserInputBatch");
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
 		res.locals.myAddress = fields.fromAddress;
@@ -94,6 +76,19 @@ function parseUserInput(req, res, next) {
 		})
 		next();
 	})
+}
+
+function parseUserInputSingle(req, res, next) {
+	console.log("parseUserInputSingle");
+	res.locals.myAddress = req.body.fromAddress;
+	res.locals.myPrivateKey = new Buffer(req.body.fromPrivateKey, 'hex');
+	res.locals.contractAddress = req.body.contractAddress;
+	res.locals.chainId = req.body.chainId;
+	res.locals.gasPrice = req.body.gasPrice;
+	res.locals.toAddress = req.body.toAddress;
+	res.locals.amount = req.body.amount;
+	res.locals.name = req.body.name;
+	next();
 }
 
 function writeToCSV(req, res, next) {
