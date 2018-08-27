@@ -45,19 +45,31 @@ router.post('/batch/token', web3.getContract, (req, res, next) => {
 		})
 })
 
-
-// ether transfer transactions
-router.post('/ether', (req, res, next) => {
+router.post('/batch/ether', (req, res, next) => {
 	res.locals.isTokenTx = false;
-	console.log("sendEthers");
-	web3.sendTxs(res.locals,
-			web3.buildRawEthTx(res.locals))
-		.then((transactionRecords) => {
-			res.locals.transactionRecords = transactionRecords;
-			next();
-		}, (reason) => { // if rejected, go to error handling route
-			next(reason);
-		})
+	console.log("SendEthersBatch");
+	web3.sendTxs(res.locals, web3.buildEthTx)
+	.then((transactionRecords) => {
+		res.locals.transactionRecords = transactionRecords;
+		next();
+	}, (reason) => {
+		console.log(reason);
+		next(reason);
+	})
+})
+
+router.post('/single/ether', (req, res, next) => {
+	res.locals.isTokenTx = false;
+	console.log("SendEtherSingle");
+	web3.sendTx(res.locals,
+	web3.buildEthTx)
+	.then((transactionRecord) => {
+		res.locals.transactionRecords = [transactionRecord];
+		next();
+	}, (reason) => {
+		console.log(reason);
+		next(reason);
+	})
 })
 
 router.use(writeToCSV, redirect);
@@ -80,6 +92,7 @@ function parseUserInputBatch(req, res, next) {
 
 function parseUserInputSingle(req, res, next) {
 	console.log("parseUserInputSingle");
+	console.log(req.body);
 	res.locals.myAddress = req.body.fromAddress;
 	res.locals.myPrivateKey = new Buffer(req.body.fromPrivateKey, 'hex');
 	res.locals.contractAddress = req.body.contractAddress;
@@ -88,6 +101,7 @@ function parseUserInputSingle(req, res, next) {
 	res.locals.toAddress = req.body.toAddress;
 	res.locals.amount = req.body.amount;
 	res.locals.name = req.body.name;
+	console.log(res.locals);
 	next();
 }
 

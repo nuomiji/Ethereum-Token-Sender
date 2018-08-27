@@ -27,6 +27,7 @@ app.use('/send', send);
 
 app.use('/', (err, req, res, next) => {
 	console.log("Bad Request");
+	console.error(err);
 	res.status(400).send(err.message);
 })
 

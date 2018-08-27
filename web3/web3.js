@@ -6,8 +6,8 @@ const request = require('request');
 var web3;
 
 function sendATx(txInfo, buildTx) {
-	console.log("sendATx: txCount:", txInfo.txCount);
-	console.log("sendATx: toAddress", txInfo.toAddress);
+	// console.log("sendATx: txCount:", txInfo.txCount);
+	// console.log("sendATx: toAddress", txInfo.toAddress);
 	return new Promise((resolve, reject) => {
 		var rawTx = buildTx(txInfo);
 		var tx = new Tx(rawTx);
