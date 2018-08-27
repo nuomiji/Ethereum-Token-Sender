@@ -11,82 +11,77 @@ const config = require('../config/config.js');
 const web3 = require('../web3/web3.js');
 
 // parse user input from form and setup Web3 instance in the correct chain
-router.use('/', parseUserInput, web3.setupNetwork);
+router.use("/batch", parseUserInputBatch, web3.setupNetwork);
 
-// token transfer transactions
-router.post('/token', web3.getContract, (req, res, next) => {
-	console.log("sendTokens");
-	web3.sendTxs(res.locals.myAddress,
-			res.locals.myPrivateKey,
-			res.locals.csvInput,
-			buildRawTokenTransaction(res.locals.contract, res.locals.contractAddress, res.locals.gasPrice))
-		.then((transactionRecords) => {
-			writeToCSV(transactionRecords, "token");
+router.use('/single', parseUserInputSingle, web3.setupNetwork);
+
+router.post('/single/token', web3.getContract, (req, res, next) => {
+	res.locals.isTokenTx = true;
+	console.log("SendTokenSingle");
+	// console.log("/single/token: res.locals:", res.locals);
+	web3.sendTx(res.locals,
+			web3.buildTokenTx)
+		.then((transactionRecord) => {
+			res.locals.transactionRecords = [transactionRecord];
 			next();
-		}, (reason) => { // if rejected, go to error handling route
-			console.log("Caught error in .catch!!");
-			req.errorMessage = reason.message;
-			next('route');
+		}, (reason) => {
+			console.log("error!");
+			console.log(reason);
+			next(reason);
 		})
-}, redirect)
+})
 
-// ether transfer transactions
-router.post('/ether', (req, res, next) => {
-	console.log("sendEthers");
-	web3.sendTxs(res.locals.myAddress,
-			res.locals.myPrivateKey,
-			res.locals.csvInput,
-			buildRawEtherTransaction(res.locals.gasPrice))
+router.post('/batch/token', web3.getContract, (req, res, next) => {
+	res.locals.isTokenTx = true;
+	console.log("SendTokensBatch");
+	web3.sendTxs(res.locals,
+			web3.buildTokenTx)
 		.then((transactionRecords) => {
-			writeToCSV(transactionRecords, "ether");
+			res.locals.transactionRecords = transactionRecords;
 			next();
-		}, (reason) => { // if rejected, go to error handling route
-			console.log("Caught error in .catch!!");
-			req.errorMessage = reason.message;
-			next('route');
+		}, (reason) => {
+			console.log(reason);
+			next(reason);
 		})
-}, redirect)
+})
 
+router.post('/batch/ether', (req, res, next) => {
+	res.locals.isTokenTx = false;
+	console.log("SendEthersBatch");
+	web3.sendTxs(res.locals, web3.buildEthTx)
+	.then((transactionRecords) => {
+		res.locals.transactionRecords = transactionRecords;
+		next();
+	}, (reason) => {
+		console.log(reason);
+		next(reason);
+	})
+})
 
-function buildRawTokenTransaction(contract, contractAddress, gasPrice) {
+router.post('/single/ether', (req, res, next) => {
+	res.locals.isTokenTx = false;
+	console.log("SendEtherSingle");
+	web3.sendTx(res.locals,
+	web3.buildEthTx)
+	.then((transactionRecord) => {
+		res.locals.transactionRecords = [transactionRecord];
+		next();
+	}, (reason) => {
+		console.log(reason);
+		next(reason);
+	})
+})
 
-	return function(nonce, toAddress, amount) {
-		var data = contract.methods.transfer(toAddress, amount).encodeABI();
+router.use(writeToCSV, redirect);
 
-		return {
-			"nonce": nonce,
-			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(gasPrice, "shannon")),
-			"gasLimit": Web3.utils.toHex(config.gasLimit),
-			"to": contractAddress,
-			"value": Web3.utils.toHex(0),
-			"data": data,
-		}
-	}
-}
-
-function buildRawEtherTransaction(gasPrice) {
-
-	return function(nonce, toAddress, amount) {
-		return {
-			"nonce": nonce,
-			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(gasPrice, "shannon")),
-			"gasLimit": Web3.utils.toHex(config.gasLimit),
-			"to": toAddress,
-			"value": Web3.utils.toHex(amount)
-		}
-	}
-}
-
-function parseUserInput(req, res, next) {
-	console.log("parseUserInput");
+function parseUserInputBatch(req, res, next) {
+	console.log("parseUserInputBatch");
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
 		res.locals.myAddress = fields.fromAddress;
 		res.locals.myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
 		res.locals.contractAddress = fields.contractAddress;
-		if (typeof fields.chainId !== 'undefined') {
-			res.locals.chainId = fields.chainId;
-		}
+		res.locals.chainId = fields.chainId;
 		res.locals.gasPrice = fields.gasPrice;
 		res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
 			columns: true
@@ -95,18 +90,47 @@ function parseUserInput(req, res, next) {
 	})
 }
 
-function writeToCSV(transactionRecords, txType) {
+function parseUserInputSingle(req, res, next) {
+	console.log("parseUserInputSingle");
+	console.log(req.body);
+	res.locals.myAddress = req.body.fromAddress;
+	res.locals.myPrivateKey = new Buffer(req.body.fromPrivateKey, 'hex');
+	res.locals.contractAddress = req.body.contractAddress;
+	res.locals.chainId = req.body.chainId;
+	res.locals.gasPrice = req.body.gasPrice;
+	res.locals.toAddress = req.body.toAddress;
+	res.locals.amount = req.body.amount;
+	res.locals.name = req.body.name;
+	console.log(res.locals);
+	next();
+}
 
+function writeToCSV(req, res, next) {
+	var txType = res.locals.isTokenTx ? 'token' : 'ether';
 	var csvWriter = createCsvWriter({
 		path: './outputs/transactions-' + txType + '.csv',
-		header: [{ id: 'Name', title: 'Name' }, { id: 'Address', title: 'Address' }, { id: 'Amount', title: 'Amount' }, { id: 'TxHash', title: 'TxHash' }, ]
+		header: [{
+			id: 'Name',
+			title: 'Name'
+		}, {
+			id: 'Address',
+			title: 'Address'
+		}, {
+			id: 'Amount',
+			title: 'Amount'
+		}, {
+			id: 'TxHash',
+			title: 'TxHash'
+		}, ]
 	});
 
 	console.log("writeToCSV");
-	csvWriter.writeRecords(transactionRecords)
+	csvWriter.writeRecords(res.locals.transactionRecords)
 		.then(() => {
 			console.log("...Done");
 		});
+
+	next();
 }
 
 function redirect(req, res) {
@@ -114,7 +138,7 @@ function redirect(req, res) {
 		let redirectPrefix = res.locals.chainId === '0x03' ? 'ropsten.' : '';
 		console.log("Redirecting...");
 		res.redirect('https://' + redirectPrefix + 'etherscan.io/address/' + res.locals.myAddress);
-	}, 3000)
+	}, 2000)
 }
 
 module.exports = router;

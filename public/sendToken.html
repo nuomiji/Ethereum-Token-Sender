@@ -9,6 +9,9 @@
 	<script>
 		$(document).ready(function() {
 
+			var isBatchToken = true;
+			var isBatchEther = true;
+
 			$("#CreateKeyPairButton").click(function() {
 				$.get('http://localhost:8080/wallet/keypair', function(response, status) {
 					$("#Wallet").empty();
@@ -29,9 +32,64 @@
 			$("#send-token-tab").click(function() {
 				$("#EtherSender").hide();
 				$("#TokenSender").show();
+			});
+
+			$("#transactionToggleToken").click(function() {
+				isBatchToken = !isBatchToken;
+				console.log(isBatchToken);
+				if (isBatchToken) {
+					$("#BatchTransactionToken").show();
+					$("#SingleTransactionToken").hide();
+					$("#transactionToggleToken").text("Swtich to Single Transaction");
+				} else {
+					$("#BatchTransactionToken").hide();
+					$("#SingleTransactionToken").show();
+					$("#transactionToggleToken").text("Swtich to Batch Transaction");
+				}
 			})
 
-		});
+			$("#transactionToggleEther").click(function() {
+				isBatchEther = !isBatchEther;
+				console.log(isBatchEther);
+				if (isBatchEther) {
+					$("#BatchTransactionEther").show();
+					$("#SingleTransactionEther").hide();
+					$("#transactionToggleEther").text("Swtich to Single Transaction");
+				} else {
+					$("#BatchTransactionEther").hide();
+					$("#SingleTransactionEther").show();
+					$("#transactionToggleEther").text("Swtich to Batch Transaction");
+				}
+
+			})
+
+			submitTokenTx = function() {
+				if (isBatchToken) {
+					document.batchTokenTxForm.submit();
+				} else {
+					console.log("Single Token Transaction.");
+					document.singleTokenTxForm.fromAddress.value = document.batchTokenTxForm.fromAddress.value;
+					document.singleTokenTxForm.fromPrivateKey.value = document.batchTokenTxForm.fromPrivateKey.value;
+					document.singleTokenTxForm.contractAddress.value = document.batchTokenTxForm.contractAddress.value;
+					document.singleTokenTxForm.chainId.value = document.batchTokenTxForm.chainId.value;
+					document.singleTokenTxForm.gasPrice.value = document.batchTokenTxForm.gasPrice.value;
+					document.singleTokenTxForm.submit();
+				}
+			}
+
+			submitEtherTx = function() {
+				if (isBatchEther) {
+					document.batchEtherTxForm.submit();
+				} else {
+					console.log("Single Ether Transaction.");
+					document.singleEtherTxForm.fromAddress.value = document.batchEtherTxForm.fromAddress.value;
+					document.singleEtherTxForm.fromPrivateKey.value = document.batchEtherTxForm.fromPrivateKey.value;
+					document.singleEtherTxForm.chainId.value = document.batchEtherTxForm.chainId.value;
+					document.singleEtherTxForm.gasPrice.value = document.batchEtherTxForm.gasPrice.value;
+					document.singleEtherTxForm.submit();
+				}
+			}
+		})
 	</script>
 </head>
 
@@ -44,7 +102,6 @@
 		</ul>
 	</nav>
 
-
 	<div id="CreateWallet" class="container" style="display:none">
 		<h1>Create New Wallet</h1>
 		<button id="CreateKeyPairButton">Create New Wallet</button>
@@ -53,90 +110,113 @@
 			<input type="submit" value="Create New Wallet with Password" />
 		</form>
 
-
-
-
 		<div id="Wallet"></div>
 	</div>
 
 	<div id="TokenSender" class="container">
 		<div id="UserInfo">
 			<h1> Token Sender </h1>
-			<form action='http://localhost:8080/send/token' method="post" enctype="multipart/form-data">
 
-				<label for="fromAddress">From Address:</label>
-				<input type="text" name="fromAddress" placeholder="Enter your Account Address" required/>
+			<label for="fromAddress">From Address:</label>
+			<input name="fromAddress" form="batchTokenTxForm" type="text" placeholder="Enter your Account Address" required/>
 
-				<label for="fromPrivateKey">Your Private Key</label>
-				<input type="password" name="fromPrivateKey" placeholder="Enter your private key" required/>
+			<label for="fromPrivateKey">Your Private Key</label>
+			<input name="fromPrivateKey" form="batchTokenTxForm" type="password" placeholder="Enter your private key" required/>
 
-				<select name="contractAddress">
-					<option value="0x14466590b32b83be64898fd8b70e1a050da0a9d0"> MyTestingToken </option>
-					<option value="0x7790Fb25768658a01b76f5a8dA50E4b4EAf94183"> mainnet token </option>
-				</select>
+			<label for="contractAddress">Contract Address</label>
+			<input name="contractAddress" form="batchTokenTxForm" type="text" value="0x14466590b32b83be64898fd8b70e1a050da0a9d0" required />
 
-				<select name='chainId'>
+			<select name='chainId' form="batchTokenTxForm">
 					<option value='0x03'> Ropsten TestNet</option>
 					<option value='0x01'> MainNet </option>
-				</select>
+			</select>
 
-				<label for='gasPrice'>Gas Price</label>
-				<input type="range" name='gasPrice' id='gasPriceSliderId' min='1' max="20" value="5" oninput="gasPriceTagId.value = gasPriceSliderId.value" />
-				<output id="gasPriceTagId">5</output>
+			<label for='gasPrice'>Gas Price</label>
+			<input name='gasPrice' id='gasPriceSliderIdToken' form="batchTokenTxForm" type="range" min='1' max="20" value="5" step="0.1" oninput="gasPriceTagIdToken.value = gasPriceSliderIdToken.value" />
+			<output id="gasPriceTagIdToken">5</output>
 
+			<button type="button" id="transactionToggleToken"> Switch to Single Transaction</button>
 
-				<div id="BatchTransaction">
+			<form id="batchTokenTxForm" name="batchTokenTxForm" action='http://localhost:8080/send/batch/token' method="post" enctype="multipart/form-data">
+				<div id="BatchTransactionToken">
 					<label for="destinations">Multiple Recipients:</label>
 					<input type="file" name="destinations" placeholder="List of Recipients" required/>
 				</div>
-
-				<!-- <div id="SingleTransaction"> <label for="toAddress" class="col-lg-2 control-label">To Address:</label> <input type="text" name="toAddress" placeholder="Enter your receipient" /> <label for="amount" class="col-lg-2 control-label">Transfer
-		Amount:</label> <input type="text" name="amount" placeholder="Enter amount" /> </div> -->
-
-				<input type="submit" value="Send Token" />
-
 			</form>
+
+			<form id="singleTokenTxForm" name="singleTokenTxForm" action='http://localhost:8080/send/single/token' method="post">
+				<div id="SingleTransactionToken" style="display:none">
+					<input name="fromAddress" type="text" style="display:none" />
+					<input name="fromPrivateKey" type="password" style="display:none" />
+					<input name="contractAddress" type="text" style="display:none" />
+					<input name="gasPrice" type="text" style="display:none" />
+					<input name="chainId" type="text" style="display:none" />
+
+					<label for="name">Recipient Name</label>
+					<input type="text" name="name" placeholder="Enter Recipient name" value="yi" />
+					<label for="toAddress" class="control-label">To Address:</label>
+					<input type="text" name="toAddress" placeholder="Enter your receipient" value="0xffcdc69320928d609f656a335a1598592f039592" />
+					<label for="amount" class="control-label">Transfer Amount:</label>
+					<input type="text" name="amount" placeholder="Enter amount" value="10000" />
+				</div>
+			</form>
+
+			<button type="button" onclick="submitTokenTx()">Send Transaction</button>
 
 		</div>
 
 	</div>
 
+	<div id="EtherSender" class="container" style="display:none">
+		<div id="UserInfo">
+			<h1> Ether Sender </h1>
 
-
-
-	<div id="EtherSender" class="container" style="display: none">
-		<h1> Ether Sender </h1>
-		<form action='http://localhost:8080/send/ether' method="post" enctype="multipart/form-data">
 			<label for="fromAddress">From Address:</label>
-			<input type="text" name="fromAddress" placeholder="Enter your Account Address" required/>
+			<input name="fromAddress" form="batchEtherTxForm" type="text" placeholder="Enter your Account Address" required/>
 
 			<label for="fromPrivateKey">Your Private Key</label>
-			<input type="password" name="fromPrivateKey" placeholder="Enter your private key" required/>
+			<input name="fromPrivateKey" form="batchEtherTxForm" type="password" placeholder="Enter your private key" required/>
 
-			<select name='chainId'>
-								<option value='0x03'> Ropsten TestNet</option>
-								<option value='0x01'> MainNet </option>
-							</select>
+			<select name='chainId' form="batchEtherTxForm">
+					<option value='0x03'> Ropsten TestNet</option>
+					<option value='0x01'> MainNet </option>
+			</select>
 
 			<label for='gasPrice'>Gas Price</label>
-			<input type="range" name='gasPrice' id='gasPriceSliderId' min='1' max="20" value="5" oninput="gasPriceTagId.value = gasPriceSliderId.value" />
-			<output id="gasPriceTagId">5</output>
+			<input name='gasPrice' id='gasPriceSliderIdEther' form="batchEtherTxForm" type="range" min='1' max="20" value="5" step="0.1" oninput="gasPriceTagIdEthern.value = gasPriceSliderIdEther.value" />
+			<output id="gasPriceTagIdEther">5</output>
 
+			<button type="button" id="transactionToggleEther"> Send Single Transaction</button>
 
-			<div id="BatchTransaction">
-				<label for="destinations">Multiple Recipients:</label>
-				<input type="file" name="destinations" placeholder="List of Recipients" required/>
-			</div>
+			<form id="batchEtherTxForm" name="batchEtherTxForm" action='http://localhost:8080/send/batch/ether' method="post" enctype="multipart/form-data">
+				<div id="BatchTransactionEther">
+					<label for="destinations">Multiple Recipients:</label>
+					<input type="file" name="destinations" placeholder="List of Recipients" required/>
+				</div>
+			</form>
 
-			<input type="submit" value="Send Token" />
+			<form id="singleEtherTxForm" name="singleEtherTxForm" action='http://localhost:8080/send/single/ether' method="post">
+				<div id="SingleTransactionEther" style="display:none">
+					<input name="fromAddress" type="text" style="display:none" />
+					<input name="fromPrivateKey" type="password" style="display:none" />
+					<input name="gasPrice" type="text" style="display:none" />
+					<input name="chainId" type="text" style="display:none" />
 
-		</form>
+					<label for="name">Recipient Name</label>
+					<input type="text" name="name" placeholder="Enter Recipient name" value="yi" />
+					<label for="toAddress" class="control-label">To Address:</label>
+					<input type="text" name="toAddress" placeholder="Enter your receipient" value="0xffcdc69320928d609f656a335a1598592f039592" />
+					<label for="amount" class="control-label">Transfer Amount:</label>
+					<input type="text" name="amount" placeholder="Enter amount" value="10000" />
+				</div>
+			</form>
 
+			<button type="button" onclick="submitEtherTx()">Send Transaction</button>
 
-		<!-- TODO!!! -->
-
+		</div>
 
 	</div>
+
 </body>
 
 </html>

@@ -5,18 +5,30 @@ const request = require('request');
 
 var web3;
 
-function sendToken(serializedTx, toAddress, amount, name) {
-
+function sendTxHelper(txInfo, buildTx) {
 	return new Promise((resolve, reject) => {
+		var rawTx = buildTx(txInfo);
+		var tx = new Tx(rawTx);
+
+		try {
+			tx.sign(txInfo.myPrivateKey);
+		} catch (e) {
+			reject(e);
+			return;
+		}
+
+		var serializedTx = '0x' + tx.serialize().toString('hex');
+
+		let transactionRecord = {
+			Name: txInfo.name,
+			Address: txInfo.toAddress,
+			Amount: txInfo.amount
+		}
+
 		web3.eth.sendSignedTransaction(serializedTx)
 			.on('transactionHash', (hash) => {
-				let transactionRecord = {
-					Name: name,
-					Address: toAddress,
-					Amount: amount,
-					TxHash: hash,
-				}
 				console.log(hash);
+				transactionRecord.TxHash = hash;
 				resolve(transactionRecord);
 			})
 			.on('error', (error) => {
@@ -42,9 +54,14 @@ module.exports = {
 		let etherscanPrefix = res.locals.chainId === '0x03' ? '-ropsten' : '';
 		let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + res.locals.contractAddress + '&apikey=' + config.etherscanApiKey;
 		request(etherscanURL, (error, response, data) => {
+			if (error) {
+				next(error);
+				return;
+			}
+
 			if (JSON.parse(data).status === '0') {
 				req.errorMessage = JSON.parse(data).result;
-				next('route');
+				next(new Error(req.errorMessage));
 			} else {
 				var abiArray = JSON.parse(JSON.parse(data).result);
 				res.locals.contract = new web3.eth.Contract(abiArray, res.locals.contractAddress);
@@ -53,32 +70,22 @@ module.exports = {
 		})
 	},
 
-	sendTxs: function(myAddress, myPrivateKey, csvInput, buildRawTransaction) {
+	sendTxs: function(txInfo, buildTx) {
 		return new Promise((resolve, reject) => {
-			web3.eth.getTransactionCount(myAddress)
+			web3.eth.getTransactionCount(txInfo.myAddress)
 				.then((transactionCount) => {
-					console.log("transactionCount:", transactionCount);
+					txInfo.txCount = transactionCount;
 					var promises = [];
-					for (let i = 0; i < csvInput.length; i++) {
-						var element = csvInput[i];
-						var toAddress = element.Address;
-						var amount = element.Amount;
-						var name = element.Name;
+					for (let i = 0; i < txInfo.csvInput.length; i++) {
+						var element = txInfo.csvInput[i];
 
-						var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount);
-						var tx = new Tx(rawTransaction);
+						txInfo.toAddress = element.Address;
+						txInfo.amount = element.Amount;
+						txInfo.name = element.Name;
 
-						try {
-							tx.sign(myPrivateKey);
-						} catch (e) {
-							reject(e);
-							return;
-						}
-						var serializedTx = '0x' + tx.serialize().toString('hex');
+						promises.push(sendTxHelper(txInfo, buildTx));
 
-						promises.push(sendToken(serializedTx, toAddress, amount, name))
-
-						transactionCount++;
+						txInfo.txCount = txInfo.txCount + 1;
 					}
 
 					Promise.all(promises)
@@ -88,7 +95,46 @@ module.exports = {
 							reject(reason);
 						})
 				})
-
 		})
+	},
+
+	sendTx: function(txInfo, buildTx) {
+		return new Promise((resolve, reject) => {
+			web3.eth.getTransactionCount(txInfo.myAddress)
+				.then((transactionCount) => {
+					console.log("sendTx: transactionCount:", transactionCount);
+					txInfo.txCount = transactionCount;
+					sendTxHelper(txInfo, buildTx)
+						.then((transactionRecord) => {
+							resolve(transactionRecord);
+						}, (reason) => {
+							reject(reason);
+						})
+				})
+		})
+	},
+
+	buildTokenTx: function(txInfo) {
+		var data = txInfo.contract.methods.transfer(txInfo.toAddress, txInfo.amount).encodeABI();
+
+		return {
+			"nonce": txInfo.txCount,
+			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+			"gasLimit": Web3.utils.toHex(config.gasLimit),
+			"to": txInfo.contractAddress,
+			"value": Web3.utils.toHex(0),
+			"data": data,
+		}
+	},
+
+	buildEthTx: function(txInfo) {
+		return {
+			"nonce": txInfo.txCount,
+			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+			"gasLimit": Web3.utils.toHex(config.gasLimit),
+			"to": txInfo.toAddress,
+			"value": Web3.utils.toHex(txInfo.amount)
+		}
 	}
+
 }
