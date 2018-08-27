@@ -27,24 +27,22 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 - create password encrypted account and generate keystore file
 
 ### Send Token
-- batch transaction done on given ERC20 token type 
-- contract selection currently implemented as dropdown
-- network selection implemented as dropdown selection
-- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
+- batch or single transaction done on given ERC20 token type
+- toggle between batch and single using the TxToggle button
+- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in 18th decimal place)
 - webpage will be redirected to ```Etherscan``` and transaction hashes will be generated in CSV formt under ```outputs``` folder
 
 ### Send Ether
-- batch transaction on Ether
-- network selection implemented as dropdown
+- batch or single transaction on Ether
+- toggle between batch and single using the TxToggle button
 - upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
 - webpage will be redirected to ```Etherscan``` and transaction hashes will be generated in CSV formt under ```outputs``` folder
-
-### (single transaction under development)
 
 ## Todo's
 - ~~keystore file download~~ ✓
 - ~~~user defined gas price~~~ ✓
-- single transaction
+- ~~~single transaction~~~ ✓
 - ~~~transfer Ether~~~ ✓
+- read keystore file
 - migrate all functionalities to client-side
 
