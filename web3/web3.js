@@ -135,6 +135,6 @@ module.exports = {
 			"to": txInfo.toAddress,
 			"value": Web3.utils.toHex(txInfo.amount)
 		}
-	},
+	}
 
 }

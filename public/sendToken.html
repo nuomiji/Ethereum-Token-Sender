@@ -34,15 +34,17 @@
 				$("#TokenSender").show();
 			});
 
-			$("#transactionToggle").click(function() {
+			$("#transactionToggleToken").click(function() {
 				isBatchToken = !isBatchToken;
 				console.log(isBatchToken);
 				if (isBatchToken) {
 					$("#BatchTransactionToken").show();
 					$("#SingleTransactionToken").hide();
+					$("#transactionToggleToken").text("Swtich to Single Transaction");
 				} else {
 					$("#BatchTransactionToken").hide();
 					$("#SingleTransactionToken").show();
+					$("#transactionToggleToken").text("Swtich to Batch Transaction");
 				}
 			})
 
@@ -52,10 +54,13 @@
 				if (isBatchEther) {
 					$("#BatchTransactionEther").show();
 					$("#SingleTransactionEther").hide();
+					$("#transactionToggleEther").text("Swtich to Single Transaction");
 				} else {
 					$("#BatchTransactionEther").hide();
 					$("#SingleTransactionEther").show();
+					$("#transactionToggleEther").text("Swtich to Batch Transaction");
 				}
+
 			})
 
 			submitTokenTx = function() {
@@ -130,7 +135,7 @@
 			<input name='gasPrice' id='gasPriceSliderIdToken' form="batchTokenTxForm" type="range" min='1' max="20" value="5" step="0.1" oninput="gasPriceTagIdToken.value = gasPriceSliderIdToken.value" />
 			<output id="gasPriceTagIdToken">5</output>
 
-			<button type="button" id="transactionToggle"> Send Single Transaction</button>
+			<button type="button" id="transactionToggleToken"> Switch to Single Transaction</button>
 
 			<form id="batchTokenTxForm" name="batchTokenTxForm" action='http://localhost:8080/send/batch/token' method="post" enctype="multipart/form-data">
 				<div id="BatchTransactionToken">
