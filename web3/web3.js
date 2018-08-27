@@ -54,6 +54,11 @@ module.exports = {
 		let etherscanPrefix = res.locals.chainId === '0x03' ? '-ropsten' : '';
 		let etherscanURL = 'https://api' + etherscanPrefix + '.etherscan.io/api?module=contract&action=getabi&address=' + res.locals.contractAddress + '&apikey=' + config.etherscanApiKey;
 		request(etherscanURL, (error, response, data) => {
+			if (error) {
+				next(error);
+				return;
+			}
+
 			if (JSON.parse(data).status === '0') {
 				req.errorMessage = JSON.parse(data).result;
 				next(new Error(req.errorMessage));
