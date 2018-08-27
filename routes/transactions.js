@@ -14,19 +14,55 @@ const web3 = require('../web3/web3.js');
 router.use(parseUserInput, web3.setupNetwork);
 
 // token transfer transactions
-router.post('/token', web3.getContract, (req, res, next) => {
+// router.post('/token', web3.getContract, (req, res, next) => {
+// 	res.locals.isTokenTx = true;
+// 	console.log("sendTokens");
+// 	web3.sendTxs(res.locals,
+// 			web3.buildRawTokenTx(res.locals))
+// 		.then((transactionRecords) => {
+// 			res.locals.transactionRecords = transactionRecords;
+// 			next();
+// 		}, (reason) => { // if rejected, go to error handling route
+// 			console.log(reason);
+// 			next(reason);
+// 		})
+// })
+
+router.use('/token', web3.getContract);
+
+router.post('/token/single', (req, res, next) => {
 	res.locals.isTokenTx = true;
-	console.log("sendTokens");
+	console.log("SendTokensSingle");
+	web3.eth.getTransactionCount(res.locals.myAddress)
+		.then((txCount) => {
+			console.log("transactionCount:", txCount);
+			res.locals.txCount = txCount;
+			web3.sendTx(res.locals,
+					web3.buildTokenTx)
+				.then((transactionRecord) => {
+					res.locals.transactionRecords = [transactionRecord];
+					next();
+				}, (reason) => {
+					console.log(reason);
+					next(reason);
+				})
+		})
+})
+
+router.post('/token', (req, res, next) => {
+	res.locals.isTokenTx = true;
+	console.log("SendTokensBatch");
 	web3.sendTxs(res.locals,
-			web3.buildRawTokenTx(res.locals))
+			web3.buildTokenTx)
 		.then((transactionRecords) => {
 			res.locals.transactionRecords = transactionRecords;
 			next();
-		}, (reason) => { // if rejected, go to error handling route
+		}, (reason) => {
 			console.log(reason);
 			next(reason);
 		})
 })
+
 
 // ether transfer transactions
 router.post('/ether', (req, res, next) => {

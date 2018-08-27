@@ -5,6 +5,41 @@ const request = require('request');
 
 var web3;
 
+function sendATx(txInfo, buildTx) {
+	console.log("sendATx: txCount:", txInfo.txCount);
+	console.log("sendATx: toAddress", txInfo.toAddress);
+	return new Promise((resolve, reject) => {
+		var rawTx = buildTx(txInfo);
+		var tx = new Tx(rawTx);
+
+		try {
+			tx.sign(txInfo.myPrivateKey);
+		} catch (e) {
+			reject(e);
+			return;
+		}
+
+		var serializedTx = '0x' + tx.serialize().toString('hex');
+
+		let transactionRecord = {
+			Name: txInfo.name,
+			Address: txInfo.toAddress,
+			Amount: txInfo.amount
+		}
+
+		web3.eth.sendSignedTransaction(serializedTx)
+			.on('transactionHash', (hash) => {
+				console.log(hash);
+				transactionRecord.hash = hash;
+				resolve(transactionRecord);
+			})
+			.on('error', (error) => {
+				console.log("rejected");
+				reject(error);
+			})
+	})
+}
+
 function sendToken(serializedTx, toAddress, amount, name) {
 
 	return new Promise((resolve, reject) => {
@@ -53,32 +88,22 @@ module.exports = {
 		})
 	},
 
-	sendTxs: function(txInfo, buildRawTransaction) {
+	sendTxs: function(txInfo, buildTx) {
 		return new Promise((resolve, reject) => {
 			web3.eth.getTransactionCount(txInfo.myAddress)
 				.then((transactionCount) => {
-					console.log("transactionCount:", transactionCount);
+					txInfo.txCount = transactionCount;
 					var promises = [];
 					for (let i = 0; i < txInfo.csvInput.length; i++) {
 						var element = txInfo.csvInput[i];
-						var toAddress = element.Address;
-						var amount = element.Amount;
-						var name = element.Name;
 
-						var rawTransaction = buildRawTransaction(transactionCount, toAddress, amount);
-						var tx = new Tx(rawTransaction);
+						txInfo.toAddress = element.Address;
+						txInfo.amount = element.Amount;
+						txInfo.name = element.Name;
 
-						try {
-							tx.sign(txInfo.myPrivateKey);
-						} catch (e) {
-							reject(e);
-							return;
-						}
-						var serializedTx = '0x' + tx.serialize().toString('hex');
+						promises.push(sendATx(txInfo, buildTx));
 
-						promises.push(sendToken(serializedTx, toAddress, amount, name))
-
-						transactionCount++;
+						txInfo.txCount = txInfo.txCount + 1;
 					}
 
 					Promise.all(promises)
@@ -88,8 +113,22 @@ module.exports = {
 							reject(reason);
 						})
 				})
-
 		})
+	},
+
+	sendATx: sendATx,
+
+	buildTokenTx: function(txInfo) {
+		var data = txInfo.contract.methods.transfer(txInfo.toAddress, txInfo.amount).encodeABI();
+
+		return {
+			"nonce": txInfo.txCount,
+			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+			"gasLimit": Web3.utils.toHex(config.gasLimit),
+			"to": txInfo.contractAddress,
+			"value": Web3.utils.toHex(0),
+			"data": data,
+		}
 	},
 
 	buildRawTokenTx: function(txInfo) {
@@ -105,6 +144,16 @@ module.exports = {
 				"value": Web3.utils.toHex(0),
 				"data": data,
 			}
+		}
+	},
+
+	buildEthTx: function(txInfo) {
+		return {
+			"nonce": txInfo.txCount,
+			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+			"gasLimit": Web3.utils.toHex(config.gasLimit),
+			"to": txInfo.toAddress,
+			"value": Web3.utils.toHex(txInfo.amount)
 		}
 	},
 
