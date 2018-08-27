@@ -5,9 +5,7 @@ const request = require('request');
 
 var web3;
 
-function sendATx(txInfo, buildTx) {
-	// console.log("sendATx: txCount:", txInfo.txCount);
-	// console.log("sendATx: toAddress", txInfo.toAddress);
+function sendTxHelper(txInfo, buildTx) {
 	return new Promise((resolve, reject) => {
 		var rawTx = buildTx(txInfo);
 		var tx = new Tx(rawTx);
@@ -30,28 +28,7 @@ function sendATx(txInfo, buildTx) {
 		web3.eth.sendSignedTransaction(serializedTx)
 			.on('transactionHash', (hash) => {
 				console.log(hash);
-				transactionRecord.hash = hash;
-				resolve(transactionRecord);
-			})
-			.on('error', (error) => {
-				console.log("rejected");
-				reject(error);
-			})
-	})
-}
-
-function sendToken(serializedTx, toAddress, amount, name) {
-
-	return new Promise((resolve, reject) => {
-		web3.eth.sendSignedTransaction(serializedTx)
-			.on('transactionHash', (hash) => {
-				let transactionRecord = {
-					Name: name,
-					Address: toAddress,
-					Amount: amount,
-					TxHash: hash,
-				}
-				console.log(hash);
+				transactionRecord.TxHash = hash;
 				resolve(transactionRecord);
 			})
 			.on('error', (error) => {
@@ -101,7 +78,7 @@ module.exports = {
 						txInfo.amount = element.Amount;
 						txInfo.name = element.Name;
 
-						promises.push(sendATx(txInfo, buildTx));
+						promises.push(sendTxHelper(txInfo, buildTx));
 
 						txInfo.txCount = txInfo.txCount + 1;
 					}
@@ -122,7 +99,7 @@ module.exports = {
 				.then((transactionCount) => {
 					console.log("sendTx: transactionCount:", transactionCount);
 					txInfo.txCount = transactionCount;
-					sendATx(txInfo, buildTx)
+					sendTxHelper(txInfo, buildTx)
 						.then((transactionRecord) => {
 							resolve(transactionRecord);
 						}, (reason) => {
@@ -145,22 +122,6 @@ module.exports = {
 		}
 	},
 
-	buildRawTokenTx: function(txInfo) {
-
-		return function(nonce, toAddress, amount) {
-			var data = txInfo.contract.methods.transfer(toAddress, amount).encodeABI();
-
-			return {
-				"nonce": nonce,
-				"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
-				"gasLimit": Web3.utils.toHex(config.gasLimit),
-				"to": txInfo.contractAddress,
-				"value": Web3.utils.toHex(0),
-				"data": data,
-			}
-		}
-	},
-
 	buildEthTx: function(txInfo) {
 		return {
 			"nonce": txInfo.txCount,
@@ -171,16 +132,4 @@ module.exports = {
 		}
 	},
 
-	buildRawEthTx: function(txInfo) {
-
-		return function(nonce, toAddress, amount) {
-			return {
-				"nonce": nonce,
-				"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
-				"gasLimit": Web3.utils.toHex(config.gasLimit),
-				"to": toAddress,
-				"value": Web3.utils.toHex(amount)
-			}
-		}
-	}
 }
