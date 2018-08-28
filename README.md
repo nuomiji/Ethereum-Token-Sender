@@ -45,5 +45,6 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 - ~~~user defined gas price~~~ ✓
 - ~~~single transaction~~~ ✓
 - ~~~transfer Ether~~~ ✓
-- read keystore file
+- ~~~read keystore file~~~ ✓
+- switch between private key login and keystore login
 - migrate all functionalities to client-side
