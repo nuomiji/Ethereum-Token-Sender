@@ -18,7 +18,6 @@ router.use(parseUserInput, web3.setupNetwork, web3.setupAccount);
 router.post('/single/token', web3.getContract, (req, res, next) => {
 	res.locals.isTokenTx = true;
 	console.log("SendTokenSingle");
-	// console.log("/single/token: res.locals:", res.locals);
 	web3.sendTx(res.locals,
 			web3.buildTokenTx)
 		.then((transactionRecord) => {
@@ -48,7 +47,8 @@ router.post('/batch/token', web3.getContract, (req, res, next) => {
 router.post('/batch/ether', (req, res, next) => {
 	res.locals.isTokenTx = false;
 	console.log("SendEthersBatch");
-	web3.sendTxs(res.locals, web3.buildEthTx)
+	web3.sendTxs(res.locals,
+			web3.buildEthTx)
 		.then((transactionRecords) => {
 			res.locals.transactionRecords = transactionRecords;
 			next();
@@ -58,43 +58,21 @@ router.post('/batch/ether', (req, res, next) => {
 		})
 })
 
-// router.post('/single/ether', (req, res, next) => {
-// 	res.locals.isTokenTx = false;
-// 	console.log("SendEtherSingle");
-// 	web3.sendTx(res.locals,
-// 	web3.buildEthTx)
-// 	.then((transactionRecord) => {
-// 		res.locals.transactionRecords = [transactionRecord];
-// 		next();
-// 	}, (reason) => {
-// 		console.log(reason);
-// 		next(reason);
-// 	})
-// })
+router.post('/single/ether', (req, res, next) => {
+	res.locals.isTokenTx = false;
+	console.log("SendEtherSingle");
+	web3.sendTx(res.locals,
+			web3.buildEthTx)
+		.then((transactionRecord) => {
+			res.locals.transactionRecords = [transactionRecord];
+			next();
+		}, (reason) => {
+			console.log(reason);
+			next(reason);
+		})
+})
 
 router.use(writeToCSV, redirect);
-
-// function parseUserInputBatch(req, res, next) {
-// 	console.log("parseUserInputBatch");
-// 	var form = new formidable.IncomingForm();
-// 	form.parse(req, (err, fields, files) => {
-// 		console.log("fields", fields);
-// 		// res.locals.myAddress = fields.fromAddress;
-// 		// res.locals.myPrivateKey = new Buffer(fields.fromPrivateKey, 'hex');
-// 		res.locals.contractAddress = fields.contractAddress;
-// 		res.locals.chainId = fields.chainId;
-// 		res.locals.gasPrice = fields.gasPrice;
-// 		if (files.keystore) {
-// 			res.locals.password = fields.password;
-// 			res.locals.keystore = JSON.parse(fs.readFileSync(files.keystore.path, 'utf-8'));
-// 		}
-// 		res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
-// 			columns: true
-// 		})
-//
-// 		next();
-// 	})
-// }
 
 function parseUserInput(req, res, next) {
 	var form = new formidable.IncomingForm();
@@ -102,42 +80,24 @@ function parseUserInput(req, res, next) {
 		res.locals.contractAddress = fields.contractAddress;
 		res.locals.chainId = fields.chainId;
 		res.locals.gasPrice = fields.gasPrice;
-		if (files.keystore) {
+		if (typeof fields.privateKey !== 'undefined') {
+			res.locals.privateKey = fields.privateKey;
+		} else {
 			res.locals.password = fields.password;
 			res.locals.keystore = JSON.parse(fs.readFileSync(files.keystore.path, 'utf-8'));
 		}
-		if(files.destinations){
-		res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
-			columns: true
-		})
-	} else {
-		res.locals.name = fields.name;
-		res.locals.toAddress = fields.toAddress;
-		res.locals.amount = fields.amount;
-	}
+		if (files.destinations) {
+			res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {
+				columns: true
+			})
+		} else {
+			res.locals.name = fields.name;
+			res.locals.toAddress = fields.toAddress;
+			res.locals.amount = fields.amount;
+		}
 		next();
 	})
 }
-
-// function parseUserInputSingle(req, res, next) {
-// 	console.log("parseUserInputSingle");
-// 	var form = new formidable.IncomingForm();
-// 	form.parse(req, (err, fields, files) => {
-// 		console.log("fields", fields);
-// 		res.locals.contractAddress = fields.contractAddress;
-// 		res.locals.chainId = fields.chainId;
-// 		res.locals.gasPrice = fields.gasPrice;
-// 		if (files.keystore) {
-// 			res.locals.password = fields.password;
-// 			res.locals.keystore = JSON.parse(fs.readFileSync(files.keystore.path, 'utf-8'));
-// 			console.log("keystore:", res.locals.keystore);
-// 		}
-// 		res.locals.name = fields.name;
-// 		res.locals.toAddress = fields.toAddress;
-// 		res.locals.amount = fields.amount;
-// 		next();
-// 	})
-// }
 
 function writeToCSV(req, res, next) {
 	var txType = res.locals.isTokenTx ? 'token' : 'ether';

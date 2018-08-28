@@ -100,7 +100,6 @@
 			<input type="submit" value="Create New Wallet with Password" />
 		</form>
 
-		<div id="Wallet"></div>
 	</div>
 
 	<div id="TokenSender" class="container">
@@ -137,11 +136,15 @@
 
 			<form id="singleTokenTxForm" name="singleTokenTxForm" action="http://localhost:8080/send/single/token" method="post" enctype="multipart/form-data">
 				<div id="SingleTransactionToken" style="display:none">
+
+					<!-- <label for="privateKey">Private Key:</label> -->
+					<!-- <input name="privateKey" type="password" placeholder="Enter your Private Key" value="0xeb9c47dbe32787bb641048df11ea0ed5ca93f1d40b0343a4be0da7c2713358a6" /> -->
+
 					<label for="password">Password:</label>
-					<input name="password" type="password" placeholder="Enter your Password" value="testtest" required/>
+					<input name="password" type="password" placeholder="Enter your Password" value="testtest" />
 
 					<label for="keystore">Keystore file:</label>
-					<input name="keystore" type="file" placeholder="Keystore file" required />
+					<input name="keystore" type="file" placeholder="Keystore file" />
 
 					<label for="contractAddress">Contract Address</label>
 					<input name="contractAddress" type="text" value="0x14466590b32b83be64898fd8b70e1a050da0a9d0" required />
@@ -180,36 +183,48 @@
 			<!-- <label for="fromPrivateKey">Your Private Key</label> -->
 			<!-- <input name="fromPrivateKey" form="batchEtherTxForm" type="password" placeholder="Enter your private key" required/> -->
 
-			<label for="password">Password:</label>
-			<input name="password" form="batchTokenTxForm" type="password" placeholder="Enter your Password" value="testtest" required/>
 
-			<label for="keystore">Keystore file:</label>
-			<input name="keystore" form="batchTokenTxForm" type="file" placeholder="Keystore file" required />
-
-			<select name='chainId' form="batchEtherTxForm">
-					<option value='0x03'> Ropsten TestNet</option>
-					<option value='0x01'> MainNet </option>
-			</select>
-
-			<label for='gasPrice'>Gas Price</label>
-			<input name='gasPrice' id='gasPriceSliderIdEther' form="batchEtherTxForm" type="range" min='1' max="20" value="5" step="0.1" oninput="gasPriceTagIdEther.value = gasPriceSliderIdEther.value" />
-			<output id="gasPriceTagIdEther">5</output>
 
 			<button type="button" id="transactionToggleEther"> Send Single Transaction</button>
 
 			<form id="batchEtherTxForm" name="batchEtherTxForm" action='http://localhost:8080/send/batch/ether' method="post" enctype="multipart/form-data">
 				<div id="BatchTransactionEther">
+					<label for="password">Password:</label>
+					<input name="password" type="password" placeholder="Enter your Password" value="testtest" required/>
+
+					<label for="keystore">Keystore file:</label>
+					<input name="keystore" type="file" placeholder="Keystore file" required />
+
+					<select name='chainId'>
+							<option value='0x03'> Ropsten TestNet</option>
+							<option value='0x01'> MainNet </option>
+					</select>
+
+					<label for='gasPrice'>Gas Price</label>
+					<input name='gasPrice' type="range" min='1' max="20" value="5" step="0.1" />
+
+
 					<label for="destinations">Multiple Recipients:</label>
 					<input type="file" name="destinations" placeholder="List of Recipients" required/>
 				</div>
 			</form>
 
-			<form id="singleEtherTxForm" name="singleEtherTxForm" action='http://localhost:8080/send/single/ether' method="post">
+			<form id="singleEtherTxForm" name="singleEtherTxForm" action='http://localhost:8080/send/single/ether' method="post" enctype="multipart/form-data">
 				<div id="SingleTransactionEther" style="display:none">
-					<input name="fromAddress" type="text" style="display:none" />
-					<input name="fromPrivateKey" type="password" style="display:none" />
-					<input name="gasPrice" type="text" style="display:none" />
-					<input name="chainId" type="text" style="display:none" />
+					<label for="password">Password:</label>
+					<input name="password" type="password" placeholder="Enter your Password" value="testtest" required/>
+
+					<label for="keystore">Keystore file:</label>
+					<input name="keystore" type="file" placeholder="Keystore file" required />
+
+					<select name='chainId'>
+							<option value='0x03'> Ropsten TestNet</option>
+							<option value='0x01'> MainNet </option>
+					</select>
+
+					<label for='gasPrice'>Gas Price</label>
+					<input name='gasPrice' id='gasPriceSliderIdEther' type="range" min='1' max="20" value="5" step="0.1" oninput="gasPriceTagIdEther.value = gasPriceSliderIdEther.value" />
+					<output id="gasPriceTagIdEther">5</output>
 
 					<label for="name">Recipient Name</label>
 					<input name="name" type="text" placeholder="Enter Recipient name" value="yi" />
