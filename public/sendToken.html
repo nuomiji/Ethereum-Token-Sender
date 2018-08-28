@@ -10,7 +10,7 @@
 		$(document).ready(function() {
 
 			var isBatchToken = true;
-			var isBatchEther = true;
+			// var isBatchEther = true;
 
 			$("#CreateKeyPairButton").click(function() {
 				$.get('http://localhost:8080/wallet/keypair', function(response, status) {
@@ -48,20 +48,20 @@
 				}
 			})
 
-			$("#transactionToggleEther").click(function() {
-				isBatchEther = !isBatchEther;
-				console.log(isBatchEther);
-				if (isBatchEther) {
-					$("#BatchTransactionEther").show();
-					$("#SingleTransactionEther").hide();
-					$("#transactionToggleEther").text("Swtich to Single Transaction");
-				} else {
-					$("#BatchTransactionEther").hide();
-					$("#SingleTransactionEther").show();
-					$("#transactionToggleEther").text("Swtich to Batch Transaction");
-				}
-
-			})
+			// $("#transactionToggleEther").click(function() {
+			// 	isBatchEther = !isBatchEther;
+			// 	console.log(isBatchEther);
+			// 	if (isBatchEther) {
+			// 		$("#BatchTransactionEther").show();
+			// 		$("#SingleTransactionEther").hide();
+			// 		$("#transactionToggleEther").text("Swtich to Single Transaction");
+			// 	} else {
+			// 		$("#BatchTransactionEther").hide();
+			// 		$("#SingleTransactionEther").show();
+			// 		$("#transactionToggleEther").text("Swtich to Batch Transaction");
+			// 	}
+			//
+			// })
 
 			submitTokenTx = function() {
 				if (isBatchToken) {
@@ -77,18 +77,18 @@
 				}
 			}
 
-			submitEtherTx = function() {
-				if (isBatchEther) {
-					document.batchEtherTxForm.submit();
-				} else {
-					console.log("Single Ether Transaction.");
-					document.singleEtherTxForm.fromAddress.value = document.batchEtherTxForm.fromAddress.value;
-					document.singleEtherTxForm.fromPrivateKey.value = document.batchEtherTxForm.fromPrivateKey.value;
-					document.singleEtherTxForm.chainId.value = document.batchEtherTxForm.chainId.value;
-					document.singleEtherTxForm.gasPrice.value = document.batchEtherTxForm.gasPrice.value;
-					document.singleEtherTxForm.submit();
-				}
-			}
+			// submitEtherTx = function() {
+			// 	if (isBatchEther) {
+			// 		document.batchEtherTxForm.submit();
+			// 	} else {
+			// 		console.log("Single Ether Transaction.");
+			// 		document.singleEtherTxForm.fromAddress.value = document.batchEtherTxForm.fromAddress.value;
+			// 		document.singleEtherTxForm.fromPrivateKey.value = document.batchEtherTxForm.fromPrivateKey.value;
+			// 		document.singleEtherTxForm.chainId.value = document.batchEtherTxForm.chainId.value;
+			// 		document.singleEtherTxForm.gasPrice.value = document.batchEtherTxForm.gasPrice.value;
+			// 		document.singleEtherTxForm.submit();
+			// 	}
+			// }
 		})
 	</script>
 </head>
@@ -117,11 +117,17 @@
 		<div id="UserInfo">
 			<h1> Token Sender </h1>
 
-			<label for="fromAddress">From Address:</label>
-			<input name="fromAddress" form="batchTokenTxForm" type="text" placeholder="Enter your Account Address" required/>
+			<!-- <label for="fromAddress">From Address:</label> -->
+			<!-- <input name="fromAddress" form="batchTokenTxForm" type="text" placeholder="Enter your Account Address" required/> -->
 
-			<label for="fromPrivateKey">Your Private Key</label>
-			<input name="fromPrivateKey" form="batchTokenTxForm" type="password" placeholder="Enter your private key" required/>
+			<!-- <label for="fromPrivateKey">Your Private Key</label> -->
+			<!-- <input name="fromPrivateKey" form="batchTokenTxForm" type="password" placeholder="Enter your private key" required/> -->
+
+			<label for="password">Password:</label>
+			<input name="password" form="batchTokenTxForm" type="password" placeholder="Enter your Password" value="testtest" required/>
+
+			<label for="keystore">Keystore file:</label>
+			<input name="keystore" form="batchTokenTxForm" type="file" placeholder="Keystore file" required />
 
 			<label for="contractAddress">Contract Address</label>
 			<input name="contractAddress" form="batchTokenTxForm" type="text" value="0x14466590b32b83be64898fd8b70e1a050da0a9d0" required />
@@ -167,7 +173,7 @@
 
 	</div>
 
-	<div id="EtherSender" class="container" style="display:none">
+	<!-- <div id="EtherSender" class="container" style="display:none">
 		<div id="UserInfo">
 			<h1> Ether Sender </h1>
 
@@ -215,7 +221,7 @@
 
 		</div>
 
-	</div>
+	</div> -->
 
 </body>
 

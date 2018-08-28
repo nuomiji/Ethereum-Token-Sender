@@ -7,25 +7,12 @@ var web3;
 
 function sendTxHelper(txInfo, buildTx) {
 	return new Promise((resolve, reject) => {
-		var rawTx = buildTx(txInfo);
-		var tx = new Tx(rawTx);
-
-		try {
-			tx.sign(txInfo.myPrivateKey);
-		} catch (e) {
-			reject(e);
-			return;
-		}
-
-		var serializedTx = '0x' + tx.serialize().toString('hex');
-
 		let transactionRecord = {
 			Name: txInfo.name,
 			Address: txInfo.toAddress,
 			Amount: txInfo.amount
 		}
-
-		web3.eth.sendSignedTransaction(serializedTx)
+		web3.eth.sendTransaction(buildTx(txInfo))
 			.on('transactionHash', (hash) => {
 				console.log(hash);
 				transactionRecord.TxHash = hash;
@@ -38,6 +25,39 @@ function sendTxHelper(txInfo, buildTx) {
 	})
 }
 
+// function sendTxHelper(txInfo, buildTx) {
+// 	return new Promise((resolve, reject) => {
+// 		var rawTx = buildTx(txInfo);
+// 		var tx = new Tx(rawTx);
+//
+// 		try {
+// 			tx.sign(txInfo.myPrivateKey);
+// 		} catch (e) {
+// 			reject(e);
+// 			return;
+// 		}
+//
+// 		var serializedTx = '0x' + tx.serialize().toString('hex');
+//
+// 		let transactionRecord = {
+// 			Name: txInfo.name,
+// 			Address: txInfo.toAddress,
+// 			Amount: txInfo.amount
+// 		}
+//
+// 		web3.eth.sendSignedTransaction(serializedTx)
+// .on('transactionHash', (hash) => {
+// 	console.log(hash);
+// 	transactionRecord.TxHash = hash;
+// 	resolve(transactionRecord);
+// })
+// .on('error', (error) => {
+// 	console.log("rejected");
+// 	reject(error);
+// })
+// 	})
+// }
+
 module.exports = {
 
 	setupNetwork: function(req, res, next) {
@@ -46,6 +66,18 @@ module.exports = {
 		let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
 		web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
 		next();
+	},
+
+	setupAccount: function(req, res, next) {
+		console.log("setupAccount");
+		var account = web3.eth.accounts.decrypt(res.locals.keystore, res.locals.password);
+		// console.log("account", account);
+		web3.eth.accounts.wallet.add(account);
+		web3.eth.defaultAccount = account.address;
+		console.log(web3.eth.defaultAccount);
+		// console.log(web3.eth.accounts.wallet);
+		next();
+		// res.send("Good");
 	},
 
 	getContract: function(req, res, next) {
@@ -72,30 +104,30 @@ module.exports = {
 
 	sendTxs: function(txInfo, buildTx) {
 		return new Promise((resolve, reject) => {
-			web3.eth.getTransactionCount(txInfo.myAddress)
-				.then((transactionCount) => {
-					txInfo.txCount = transactionCount;
-					var promises = [];
-					for (let i = 0; i < txInfo.csvInput.length; i++) {
-						var element = txInfo.csvInput[i];
+			// web3.eth.getTransactionCount(web3.eth.defaultAccount)
+			// .then((transactionCount) => {
+			// txInfo.txCount = transactionCount;
+			var promises = [];
+			for (let i = 0; i < txInfo.csvInput.length; i++) {
+				var element = txInfo.csvInput[i];
 
-						txInfo.toAddress = element.Address;
-						txInfo.amount = element.Amount;
-						txInfo.name = element.Name;
+				txInfo.toAddress = element.Address;
+				txInfo.amount = element.Amount;
+				txInfo.name = element.Name;
 
-						promises.push(sendTxHelper(txInfo, buildTx));
+				promises.push(sendTxHelper(txInfo, buildTx));
 
-						txInfo.txCount = txInfo.txCount + 1;
-					}
+				txInfo.txCount = txInfo.txCount + 1;
+			}
 
-					Promise.all(promises)
-						.then((transactionRecords) => {
-							resolve(transactionRecords);
-						}, (reason) => {
-							reject(reason);
-						})
+			Promise.all(promises)
+				.then((transactionRecords) => {
+					resolve(transactionRecords);
+				}, (reason) => {
+					reject(reason);
 				})
 		})
+		// })
 	},
 
 	sendTx: function(txInfo, buildTx) {
@@ -114,27 +146,40 @@ module.exports = {
 		})
 	},
 
+	// buildTokenTx: function(txInfo) {
+	// 	var data = txInfo.contract.methods.transfer(txInfo.toAddress, txInfo.amount).encodeABI();
+	//
+	// 	return {
+	// 		"nonce": txInfo.txCount,
+	// "gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+	// 		"gasLimit": Web3.utils.toHex(config.gasLimit),
+	// 		"to": txInfo.contractAddress,
+	// 		"value": Web3.utils.toHex(0),
+	// 		"data": data,
+	// 	}
+	// }
+
 	buildTokenTx: function(txInfo) {
 		var data = txInfo.contract.methods.transfer(txInfo.toAddress, txInfo.amount).encodeABI();
-
 		return {
-			"nonce": txInfo.txCount,
-			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
-			"gasLimit": Web3.utils.toHex(config.gasLimit),
+			"from": web3.eth.defaultAccount,
 			"to": txInfo.contractAddress,
 			"value": Web3.utils.toHex(0),
-			"data": data,
-		}
-	},
-
-	buildEthTx: function(txInfo) {
-		return {
-			"nonce": txInfo.txCount,
 			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
-			"gasLimit": Web3.utils.toHex(config.gasLimit),
-			"to": txInfo.toAddress,
-			"value": Web3.utils.toHex(txInfo.amount)
+			"gas": Web3.utils.toHex(70000),
+			"data": data
+			// "nonce": txInfo.txCount
 		}
 	}
+
+	// buildEthTx: function(txInfo) {
+	// 	return {
+	// 		"nonce": txInfo.txCount,
+	// 		"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
+	// 		"gasLimit": Web3.utils.toHex(config.gasLimit),
+	// 		"to": txInfo.toAddress,
+	// 		"value": Web3.utils.toHex(txInfo.amount)
+	// 	}
+	// }
 
 }
