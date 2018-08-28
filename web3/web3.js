@@ -71,13 +71,11 @@ module.exports = {
 	setupAccount: function(req, res, next) {
 		console.log("setupAccount");
 		var account = web3.eth.accounts.decrypt(res.locals.keystore, res.locals.password);
-		// console.log("account", account);
 		web3.eth.accounts.wallet.add(account);
 		web3.eth.defaultAccount = account.address;
+		res.locals.myAddress = account.address;
 		console.log(web3.eth.defaultAccount);
-		// console.log(web3.eth.accounts.wallet);
 		next();
-		// res.send("Good");
 	},
 
 	getContract: function(req, res, next) {
@@ -90,7 +88,7 @@ module.exports = {
 				next(error);
 				return;
 			}
-
+			console.log("typeof data:", typeof data);
 			if (JSON.parse(data).status === '0') {
 				req.errorMessage = JSON.parse(data).result;
 				next(new Error(req.errorMessage));
@@ -104,30 +102,30 @@ module.exports = {
 
 	sendTxs: function(txInfo, buildTx) {
 		return new Promise((resolve, reject) => {
-			// web3.eth.getTransactionCount(web3.eth.defaultAccount)
-			// .then((transactionCount) => {
-			// txInfo.txCount = transactionCount;
-			var promises = [];
-			for (let i = 0; i < txInfo.csvInput.length; i++) {
-				var element = txInfo.csvInput[i];
+			web3.eth.getTransactionCount(web3.eth.defaultAccount)
+				.then((transactionCount) => {
+					txInfo.txCount = transactionCount;
+					var promises = [];
+					for (let i = 0; i < txInfo.csvInput.length; i++) {
+						var element = txInfo.csvInput[i];
 
-				txInfo.toAddress = element.Address;
-				txInfo.amount = element.Amount;
-				txInfo.name = element.Name;
+						txInfo.toAddress = element.Address;
+						txInfo.amount = element.Amount;
+						txInfo.name = element.Name;
 
-				promises.push(sendTxHelper(txInfo, buildTx));
+						promises.push(sendTxHelper(txInfo, buildTx));
 
-				txInfo.txCount = txInfo.txCount + 1;
-			}
+						txInfo.txCount = txInfo.txCount + 1;
+					}
 
-			Promise.all(promises)
-				.then((transactionRecords) => {
-					resolve(transactionRecords);
-				}, (reason) => {
-					reject(reason);
+					Promise.all(promises)
+						.then((transactionRecords) => {
+							resolve(transactionRecords);
+						}, (reason) => {
+							reject(reason);
+						})
 				})
 		})
-		// })
 	},
 
 	sendTx: function(txInfo, buildTx) {
@@ -167,8 +165,8 @@ module.exports = {
 			"value": Web3.utils.toHex(0),
 			"gasPrice": Web3.utils.toHex(Web3.utils.toWei(txInfo.gasPrice, "shannon")),
 			"gas": Web3.utils.toHex(70000),
+			"nonce": txInfo.txCount,
 			"data": data
-			// "nonce": txInfo.txCount
 		}
 	}
 
