@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="main.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="main.js"></script>
+</head>
+
+<body>
+
+  <nav role="navigation" class="container nav-container">
+    <ul>
+      <li id="create-wallet-tab"><a>Create Wallet</a></li>
+      <li id="send-token-tab"><a>Send Token</a></li>
+      <li id="send-ether-tab"><a>Send Ether</a></li>
+    </ul>
+  </nav>
+
+  <div id="WalletCreator" class="container" style="display:none">
+    <h1>Create New Wallet</h1>
+    <button onclick="createKeyPair()">Create New Wallet</button>
+    <form id="KeystoreForm" action="http://localhost:8080/wallet/keystore" method="post">
+      <input type="password" name="password" placeholder="Please enter a strong password" pattern=".{8,}" required/>
+      <input type="submit" value="Create New Wallet with Password" />
+    </form>
+    <div id="Wallet">
+      <!-- do not delete! -->
+    </div>
+
+  </div>
+
+</body>
+
+</html>
