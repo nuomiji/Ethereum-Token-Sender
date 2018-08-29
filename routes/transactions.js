@@ -80,11 +80,18 @@ function parseUserInput(req, res, next) {
 		res.locals.contractAddress = fields.contractAddress;
 		res.locals.chainId = fields.chainId;
 		res.locals.gasPrice = fields.gasPrice;
-		if (typeof fields.privateKey !== 'undefined') {
-			res.locals.privateKey = fields.privateKey;
-		} else {
-			res.locals.password = fields.password;
-			res.locals.keystore = JSON.parse(fs.readFileSync(files.keystore.path, 'utf-8'));
+		res.locals.loginMethod = fields.loginMethod;
+		console.log("Login Method:", res.locals.loginMethod);
+		switch (fields.loginMethod) {
+			case "keystore":
+				res.locals.password = fields.password;
+				res.locals.keystore = JSON.parse(fs.readFileSync(files.keystore.path, 'utf-8'));
+				break;
+			case "private key":
+				res.locals.privateKey = fields.privateKey;
+				break;
+			default:
+				console.error("Invalid login method!");
 		}
 		if (files.destinations) {
 			res.locals.csvInput = parse(fs.readFileSync(files.destinations.path, 'utf-8'), {

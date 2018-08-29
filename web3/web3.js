@@ -37,16 +37,21 @@ module.exports = {
 
 	setupAccount: function(req, res, next) {
 		console.log("setupAccount");
-		if (typeof res.locals.privateKey === "undefined") {
-			var account = web3.eth.accounts.decrypt(res.locals.keystore, res.locals.password);
-		} else {
-			var account = web3.eth.accounts.privateKeyToAccount(res.locals.privateKey);
+		switch (res.locals.loginMethod) {
+			case "keystore":
+				var account = web3.eth.accounts.decrypt(res.locals.keystore, res.locals.password);
+				break;
+			case "private key":
+				var account = web3.eth.accounts.privateKeyToAccount(res.locals.privateKey);
+				break;
+			default:
+				console.error("Invalid Login Method!");
 		}
-		console.log(account);
+		// console.log(account);
 		web3.eth.accounts.wallet.add(account);
 		web3.eth.defaultAccount = account.address;
 		res.locals.myAddress = account.address;
-		console.log(web3.eth.defaultAccount);
+		// console.log(web3.eth.defaultAccount);
 		next();
 	},
 
@@ -61,7 +66,7 @@ module.exports = {
 				return;
 			}
 			console.log("typeof data:", typeof data);
-			console.log(data.substr(0,100));
+			console.log(data.substr(0, 100));
 			if (JSON.parse(data).status === '0') {
 				req.errorMessage = JSON.parse(data).result;
 				next(new Error(req.errorMessage));
