@@ -19,7 +19,7 @@
 
       // sends get request and appends result keypair in Wallet
       $("#CreateKeyPairButton").click(function() {
-        $.get('http://localhost:8080/wallet/keypair', function(response, status) {
+        $.get('../../wallet/keypair', function(response, status) {
           $("#Wallet").empty();
           $("#Wallet").append($('<p></p>').text(response.address));
           $("#Wallet").append($('<p></p>').text(response.privateKey));
