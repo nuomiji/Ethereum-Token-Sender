@@ -8,8 +8,16 @@
   <script>
     $(document).ready(function() {
 
+      // set default txType
+      var txType = "Multiple Token Transfers";
+
+      // initial render of TxType
+      renderTxSender(txType);
+
+      // initial rendering of TokenSender-batch
       $("#TxSender").load("./components/token-sender-batch.html");
 
+      // sends get request and appends result keypair in Wallet
       $("#CreateKeyPairButton").click(function() {
         $.get('http://localhost:8080/wallet/keypair', function(response, status) {
           $("#Wallet").empty();
@@ -18,12 +26,40 @@
         });
       });
 
+      // toggles the wallet creator
       $("#create-wallet-tab").click(function() {
         console.log("Clicked!");
         $("#CreateWallet").toggle();
       });
 
+      // renders the correct form in TxSender
+      $(".dropdown-content > a").click(function() {
+        console.log(this.text);
+        txType = this.text;
+        renderTxSender(txType);
+      })
+
     })
+
+    function renderTxSender(txType) {
+      $("#TxSender").empty();
+      switch (txType) {
+        case "Multiple Token Transfers":
+          $("#TxSender").load("./components/token-sender-batch.html");
+          break;
+        case "Single Token Transfer":
+          $("#TxSender").load("./components/token-sender-single.html");
+          break;
+        case "Multiple Ether Transfers":
+          $("#TxSender").load("./components/ether-sender-batch.html");
+          break;
+        case "Single Ether Transfer":
+          $("#TxSender").load("./components/ether-sender-single.html");
+          break;
+        default:
+          $("#TxSender").load("./components/token-sender-batch.html");
+      }
+    }
   </script>
 </head>
 

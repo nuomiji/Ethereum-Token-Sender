@@ -4,15 +4,15 @@ document.write(
 	'  <div class="dropdown">' +
 	'    <button class="dropbtn">Send Token </button>' +
 	'    <div class="dropdown-content">' +
-	'      <a href="./main.html">Multiple Transfer</a>' +
-	'      <a href="./token-sender-single.html">Single Transfer</a>' +
+	'      <a>Multiple Token Transfers</a>' +
+	'      <a>Single Token Transfer</a>' +
 	'    </div>' +
 	'  </div>' +
 	'  <div class="dropdown">' +
 	'    <button class="dropbtn">Send Ether </button>' +
 	'    <div class="dropdown-content">' +
-	'      <a href="./ether-sender-batch.html">Multiple Transfer</a>' +
-	'      <a href="./ether-sender-single.html">Single Transfer</a>' +
+	'      <a>Multiple Ether Transfers</a>' +
+	'      <a>Single Ether Transfer</a>' +
 	'    </div>' +
 	'  </div>' +
 	'</nav>'

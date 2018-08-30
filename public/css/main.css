@@ -101,6 +101,10 @@ input[type="range"] {
   width: auto;
 }
 
+select {
+  margin: 1em;
+}
+
 output {
   margin: 2em;
 }
