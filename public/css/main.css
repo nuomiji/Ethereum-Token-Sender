@@ -96,3 +96,11 @@ nav a:hover, .dropdown:hover .dropbtn {
 .loginMethod input {
   width: auto;
 }
+
+input[type="range"] {
+  width: auto;
+}
+
+output {
+  margin: 2em;
+}
