@@ -30,7 +30,7 @@ module.exports = {
 	setupNetwork: function(req, res, next) {
 		console.log("setupNetwork");
 		let providerPrefix = res.locals.chainId === '0x03' ? 'ropsten' : 'mainnet';
-		let providerUrl = 'https://' + providerPrefix + '.infura.io/vCfQu4uCspVZEATQTcmJ';
+		let providerUrl = 'https://' + providerPrefix + '.infura.io/' + config.infuraKey;
 		web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
 		next();
 	},
