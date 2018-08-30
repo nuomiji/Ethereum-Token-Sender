@@ -1,0 +1,110 @@
+body {
+  background-color: #F0F0F0;
+  /* padding: 2em; */
+  margin: 0;
+  font-family: 'Raleway', 'Source Sans Pro', 'Arial';
+}
+
+.container {
+  display: block;
+  /* width: 50%; */
+  padding: 0 4em 0 4em;
+  margin: 0 auto;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+input {
+  padding: 10px;
+  width: 50%;
+  margin-bottom: 1em;
+}
+
+button {
+  margin: 1em 0;
+  padding: 1em 2em;
+}
+
+nav {
+  overflow: hidden;
+  background-color: #e0e0e0;
+}
+
+nav a {
+  float: left;
+  text-align: center;
+  padding: 2em 2em 2em 2em;
+  text-decoration: none;
+  transition: 0.5s;
+}
+
+nav button {
+    transition: 0.5s;
+}
+
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+.dropdown .dropbtn {
+  font-size: 16px;
+  border: none;
+  outline: none;
+  /* color: white; */
+  padding: 2em 2em 2em 2em;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+nav a:hover, .dropdown:hover .dropbtn {
+  background-color: #cccccc;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #e0e0e0;
+  /* min-width: 160px; */
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  float: none;
+  /* color: black; */
+  padding: 0.8em 1em;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  text-align: left;
+}
+
+.dropdown-content a:hover {
+  background-color: #cccccc;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+
+.loginMethod input {
+  width: auto;
+}
+
+input[type="range"] {
+  width: auto;
+}
+
+select {
+  margin: 1em;
+}
+
+output {
+  margin: 2em;
+}
