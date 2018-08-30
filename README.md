@@ -26,19 +26,13 @@ The wallet creation module is hiden by default. To create new wallet, click on `
 - create account address and private key with a single click
 - create password encrypted account and generate keystore file
 
-### Send Token
+### Send Token/Ether
 
-- transaction on given ERC20 token type
-- toggle between batch and single using the toggle button
-- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in 18th decimal place)
+- hover over menu for the type of transfer (batch or single transaction)
+- token transfered must be ERC20 token type
+- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in 18th decimal place or Wei)
 - webpage will be redirected to Etherscan and transaction hashes will be generated in CSV format under ```outputs``` folder
 
-### Send Ether
-
-- transaction on Ether
-- toggle between batch and single using the toggle button
-- upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in Wei)
-- webpage will be redirected to Etherscan and transaction hashes will be generated in CSV format under ```outputs``` folder
 
 ## Todo's
 - ~~keystore file download~~ ✓
