@@ -4,7 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 app.get('/', (req, res, next) => {
-	res.redirect('http://localhost:8080/static/sendToken.html');
+	res.redirect('http://localhost:8080/static/html/main.html');
 });
 app.use('/static', express.static(path.join(__dirname, 'public')));
 

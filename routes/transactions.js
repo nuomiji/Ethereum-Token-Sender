@@ -10,10 +10,8 @@ const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const config = require('../config/config.js');
 const web3 = require('../web3/web3.js');
 
-// parse user input from form and setup Web3 instance in the correct chain
+// parse user input from form and setup Web3 instance and account in the correct chain
 router.use(parseUserInput, web3.setupNetwork, web3.setupAccount);
-
-// router.use('/single', parseUserInputSingle, web3.setupNetwork);
 
 router.post('/single/token', web3.getContract, (req, res, next) => {
 	res.locals.isTokenTx = true;
