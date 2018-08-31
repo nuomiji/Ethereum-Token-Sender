@@ -1,5 +1,5 @@
-# Token-Sender-with-Server
-A Ethereum Wallet web app using NodeJS to create new accounts and transfer ERC20 tokens
+# Ethereum-Wallet
+A Ethereum Wallet web app using NodeJS to create new accounts and transfer Ether and ERC20 tokens
 
 Project uses Infura as service provider and Etherscan API to obtain contract ABI
 
@@ -14,7 +14,7 @@ Please make sure [python 2.7](https://github.com/felixrieseberg/windows-build-to
 ```bash
 npm start
 ```
-Code is running on http://localhost:8080/
+Code is running on ```http://localhost:8080/``` or user-defined port
 
 ### Create Accounts
 The wallet creation module is hidden by default. To create new wallet, click on ```Create Wallet``` tab in navigation bar. There are two types of wallet creation:<br />
