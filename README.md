@@ -1,4 +1,4 @@
-# Token-Sender-with-Server
+# Ethereum-Wallet
 A Ethereum Wallet web app using NodeJS to create new accounts and transfer ERC20 tokens
 
 Project uses Infura as service provider and Etherscan API to obtain contract ABI
