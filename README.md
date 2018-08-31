@@ -14,7 +14,7 @@ Please make sure [python 2.7](https://github.com/felixrieseberg/windows-build-to
 ```bash
 npm start
 ```
-Code is running on http://localhost:8080/
+Code is running on ```http://localhost:8080/``` or user-defined port
 
 ### Create Accounts
 The wallet creation module is hidden by default. To create new wallet, click on ```Create Wallet``` tab in navigation bar. There are two types of wallet creation:<br />
