@@ -12,7 +12,7 @@ Please make sure [python 2.7](https://github.com/felixrieseberg/windows-build-to
 
 ### To Run
 ```bash
-node server.js
+npm start
 ```
 Code is running on http://localhost:8080/
 

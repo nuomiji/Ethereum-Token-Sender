@@ -1,13 +1,13 @@
 {
-  "name": "token-sender-with-server",
+  "name": "ethereum-wallet",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Ethereum Wallet web app using NodeJS to create new accounts and transfer ERC20 tokens",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "author": "",
+  "author": "Kelly <xiaohandang@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.18.3",
@@ -19,5 +19,18 @@
     "formidable": "^1.2.1",
     "request": "^2.87.0",
     "web3": "^1.0.0-beta.35"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuomiji/Ethereum-Wallet.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet"
+  ],
+  "bugs": {
+    "url": "https://github.com/nuomiji/Ethereum-Wallet/issues"
+  },
+  "homepage": "https://github.com/nuomiji/Ethereum-Wallet#readme"
 }
