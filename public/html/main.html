@@ -21,8 +21,8 @@
       $("#CreateKeyPairButton").click(function() {
         $.get('../../wallet/keypair', function(response, status) {
           $("#Wallet").empty();
-          $("#Wallet").append($('<p></p>').text(response.address));
-          $("#Wallet").append($('<p></p>').text(response.privateKey));
+          $("#Wallet").append($('<p></p>').text('Address: ' + response.address));
+          $("#Wallet").append($('<p></p>').text('Private Key: ' + response.privateKey));
         });
       });
 
