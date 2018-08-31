@@ -23,7 +23,7 @@ The wallet creation module is hidden by default. To create new wallet, click on 
 
 ### Send Token/Ether
 
-- hover over menu for the type of transfer (batch or single transaction)
+- hover over menu for the type of transfer
 - token transferred must be ERC20 token type
 - upload recipients info in csv file under the following format: ```Name, Address, Amount``` (units in 18th decimal place or Wei)
 - webpage will be redirected to Etherscan and transaction hashes will be generated in CSV format under ```outputs``` folder
@@ -35,7 +35,7 @@ The wallet creation module is hidden by default. To create new wallet, click on 
 - ~~~single transaction~~~ ✓
 - ~~~transfer Ether~~~ ✓
 - ~~~read keystore file~~~ ✓
-- switch between private key login and keystore login
+- switch between private key login and keystore login (currently rendering both)
 - error handling
 - restrict upload file types
 - refactor html code in public/html/components folder
